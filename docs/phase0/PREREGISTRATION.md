@@ -9,8 +9,9 @@
 - **Commit hash:** recorded below after `git commit` + `git tag` in this amendment session.
 
 ```
-COMMIT_HASH=2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab
 TAG=prereg-phase0.5
+TAG_COMMIT=<<TAG_TIP>>
+PLAN_CONTENT_COMMIT=2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab
 DATE_UTC=2026-07-23
 PLAN_VERSION=0.2.0-phase0.5
 ```

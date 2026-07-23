@@ -16,7 +16,7 @@ from .acquire import acquire_geo_series
 from .activity import infer_activities
 from .bootstrap_signature import bootstrap_meta_signatures
 from .concordance import summarize_concordance
-from .de_limma import limma_versions, run_limma_differential_expression, write_de_plots
+from .de_limma import limma_significance_counts, limma_versions, run_limma_differential_expression, write_de_plots
 from .meta_analysis import meta_analyze_signatures
 from .phenotype import (
     classify_phenotypes,
@@ -129,7 +129,7 @@ def _combat_like_pooled(
     genes = sorted(set.intersection(*(set(part.index) for part in centered_parts)))
     pooled = pd.concat([part.loc[genes] for part in centered_parts], axis=1)
     pheno = pd.concat(pheno_parts, ignore_index=True)
-    effects = standardized_effects(pooled, pheno)
+    effects = standardized_effects(pooled, pheno).rename(columns={"hedges_g": "effect", "hedges_g_se": "se"})
     effects["analysis"] = "combat_like_sensitivity"
     return effects
 
@@ -205,6 +205,215 @@ def _process_target_primary(
         try:
             result.files_created.extend(list(infer_activities(expression, study_dir / "activity").values()))
         except StopAndReportError as exc:
+            result.stop_conditions.append(exc.to_record())
+            result.notes.append(f"{accession}: activity inference stopped — {exc}")
+    return de_table, expression, phenotypes
+
+
+def _process_target_control(accession: str, acquisition: dict[str, object], result: Phase2Result) -> None:
+    phenotypes = classify_phenotypes(accession, acquisition["series_matrix_path"])
+    study_dir = _study_output_dir(accession)
+    result.per_accession_counts[accession] = _count_groups(phenotypes)
+    result.files_created.append(_save_table(phenotypes, study_dir / "phenotype_table.tsv"))
+    result.notes.append(
+        f"{accession}: acquired and phenotyped only. Inflammation-specificity control; "
+        "forbidden as IC-vs-healthy DE."
+    )
+
+
+def _process_benchmark(accession: str, acquisition: dict[str, object], result: Phase2Result) -> None:
+    phenotypes = classify_phenotypes(accession, acquisition["series_matrix_path"])
+    if accession == "GSE75214":
+        phenotypes, excluded = select_uc_only(phenotypes)
+        result.notes.append(
+            f"{accession}: excluded {excluded['excluded']} non-primary samples "
+            "(CD/Crohn's/inactive UC/ileum). Frozen contrast: UC active colon vs control colon."
+        )
+    study_dir = _study_output_dir(accession)
+    result.per_accession_counts[accession] = _count_groups(phenotypes)
+    result.files_created.append(_save_table(phenotypes, study_dir / "phenotype_table.tsv"))
+
+
+def run_phase2(*, track: str, allow_dirty: bool = False, n_bootstrap: int = 1000) -> Phase2Result:
+    """Run Phase 2 for TARGET or BENCHMARK cohorts."""
+
+    track = track.lower()
+    if track not in {"target", "benchmark"}:
+        raise ValueError("track must be 'target' or 'benchmark'")
+
+    git = git_state(".")
+    if git["dirty"] and not allow_dirty:
+        raise DirtyRepositoryError("Repository is dirty; re-run with --allow-dirty to continue.")
+
+    result = Phase2Result(track=track)
+    downloads: list[dict[str, object]] = []
+    config = load_config("configs/default.yaml")
+    try:
+        if track == "target":
+            result.notes.append(f"limma/R versions: {limma_versions()}")
+            study_results = []
+            study_expression = {}
+            study_phenotypes = {}
+            acquisitions = {}
+            for accession in TARGET_PRIMARY:
+                acquisitions[accession] = acquire_geo_series(accession)
+                downloads.extend(acquisitions[accession]["download_records"])
+                de_table, expression, phenotypes = _process_target_primary(
+                    accession, acquisitions[accession], result, gse11783_mode="non-ulcer"
+                )
+                study_results.append(de_table)
+                study_expression[accession] = expression
+                study_phenotypes[accession] = phenotypes
+
+            for mode in ("ulcer", "patient-mean"):
+                de_sens, _, _ = _process_target_primary(
+                    "GSE11783", acquisitions["GSE11783"], result, gse11783_mode=mode
+                )
+                sens_meta = meta_analyze_signatures([de_sens, study_results[1]])
+                sens_path = ensure_directory(PHASE2_META_ROOT / "sensitivity") / f"signature_meta_gse11783_{mode}.tsv"
+                result.files_created.append(
+                    _save_table(sens_meta, sens_path, header_comment=f"SENSITIVITY ONLY — GSE11783 {mode}")
+                )
+
+            for de in study_results:
+                counts = limma_significance_counts(de)
+                result.notes.append(f"{de['study'].iloc[0]} limma significance: {counts}")
+
+            meta_path = ensure_directory(PHASE2_META_ROOT) / "signature_meta.tsv"
+            if meta_path.exists():
+                superseded = ensure_directory(PHASE2_META_ROOT / "superseded")
+                stamp = utc_now_path_component()
+                archived = superseded / f"signature_meta_pre_phase25_{stamp}.tsv"
+                archived.write_bytes(meta_path.read_bytes())
+                result.files_created.append(str(archived))
+                result.notes.append(f"Superseded prior signature_meta.tsv -> {archived}")
+
+            meta = meta_analyze_signatures(study_results)
+            meta.to_csv(meta_path, sep="\t", index=False)
+            result.files_created.append(str(meta_path))
+            lost_a = len(set(study_results[0]["gene_symbol"]) - set(meta["gene_symbol"]))
+            lost_b = len(set(study_results[1]["gene_symbol"]) - set(meta["gene_symbol"]))
+            n_fdr05 = int((meta["bh_fdr"] < 0.05).sum())
+            result.notes.append(
+                f"Primary meta-analysis: DerSimonian-Laird on moderated logFC+SE; "
+                f"intersection genes={len(meta)}; lost GSE11783-only={lost_a}; lost GSE57560-only={lost_b}; "
+                f"BH-FDR<0.05={n_fdr05}"
+            )
+            g_meta = meta_analyze_signatures(study_results, effect_col="hedges_g", se_col="hedges_g_se")
+            g_path = ensure_directory(PHASE2_META_ROOT / "sensitivity") / "signature_meta_hedges_g.tsv"
+            result.files_created.append(
+                _save_table(g_meta, g_path, header_comment="SENSITIVITY ONLY — unmoderated Hedges' g DL meta")
+            )
+            top_m = set(meta.reindex(meta["pooled_effect"].abs().sort_values(ascending=False).index).head(50)["gene_symbol"])
+            top_g = set(g_meta.reindex(g_meta["pooled_effect"].abs().sort_values(ascending=False).index).head(50)["gene_symbol"])
+            result.notes.append(f"Top-50 overlap moderated vs Hedges'g sensitivity: {len(top_m & top_g)}")
+            result.concordance = summarize_concordance(study_results[0], study_results[1])
+            result.concordance["i2_distribution"] = {
+                "median": float(meta["i2"].median()),
+                "mean": float(meta["i2"].mean()),
+                "q75": float(meta["i2"].quantile(0.75)),
+            }
+            result.notes.append(str(result.concordance.get("plain_statement", "")))
+
+            rank_path = ensure_directory(PHASE2_META_ROOT / "sensitivity") / "rank_combine.tsv"
+            result.files_created.append(
+                _save_table(_rank_combine(study_results), rank_path, header_comment="SENSITIVITY ONLY — rank-based combination")
+            )
+            combat = _combat_like_pooled(study_expression, study_phenotypes)
+            combat_path = ensure_directory(PHASE2_META_ROOT / "sensitivity") / "combat_like_effects.tsv"
+            result.files_created.append(_save_table(combat, combat_path, header_comment=COMBAT_HEADER))
+
+            meta_expr = pd.DataFrame({"meta": meta.set_index("gene_symbol")["pooled_effect"]})
+            try:
+                result.files_created.extend(list(infer_activities(meta_expr, PHASE2_META_ROOT / "activity_meta").values()))
+            except StopAndReportError as exc:
+                result.stop_conditions.append(exc.to_record())
+
+            boot = bootstrap_meta_signatures(
+                study_expression,
+                study_phenotypes,
+                n_bootstrap=n_bootstrap,
+                seed=0,
+                output_dir=PHASE2_META_ROOT / "bootstrap",
+            )
+            result.files_created.extend([boot["summary_path"], boot["index_path"]])
+            result.notes.append(
+                f"Bootstrap: n={boot['n_bootstrap']}, stratified preserving group sizes; "
+                f"degenerate(sum over studies)={boot['degenerate_resamples_sum_over_studies']}; "
+                "propagates Hedges'g→DL meta as sensitivity bootstrap (primary point estimate is moderated limma meta)."
+            )
+
+            for accession in TARGET_CONTROL:
+                acquisition = acquire_geo_series(accession)
+                downloads.extend(acquisition["download_records"])
+                _process_target_control(accession, acquisition, result)
+        else:
+            result.notes.append(f"limma/R versions: {limma_versions()}")
+            result.notes.append(
+                "BENCHMARK note: GSE75214 control-limited design (UC active colon vs control colon; n_control=11)."
+            )
+            study_results = []
+            study_expression = {}
+            study_phenotypes = {}
+            for accession in BENCHMARK:
+                acquisition = acquire_geo_series(accession)
+                downloads.extend(acquisition["download_records"])
+                phenotypes = classify_phenotypes(accession, acquisition["series_matrix_path"])
+                if accession == "GSE75214":
+                    phenotypes, excluded = select_uc_only(phenotypes)
+                    result.notes.append(
+                        f"{accession}: excluded {excluded['excluded']} non-primary samples "
+                        "(CD/Crohn's/inactive UC/ileum). Frozen contrast: UC active colon vs control colon."
+                    )
+                study_dir = _study_output_dir(accession)
+                result.per_accession_counts[accession] = _count_groups(phenotypes)
+                result.files_created.append(_save_table(phenotypes, study_dir / "phenotype_table.tsv"))
+                expression, mapping_qc, processing_meta = process_expression_study(
+                    accession,
+                    BENCHMARK[accession]["platform"],
+                    acquisition["series_matrix_path"],
+                    phenotypes["sample_id"].tolist(),
+                )
+                result.notes.append(f"{accession} processing: {processing_meta}")
+                result.files_created.append(_save_table(mapping_qc, study_dir / "mapping_qc.tsv"))
+                expression_path = study_dir / "expression_gene_level.tsv"
+                expression.to_csv(expression_path, sep="\t")
+                result.files_created.append(str(expression_path))
+                de_table = run_limma_differential_expression(expression, phenotypes, accession=accession)
+                de_table["study"] = accession
+                de_path = study_dir / "de_limma.tsv"
+                de_table.to_csv(de_path, sep="\t", index=False)
+                result.files_created.append(str(de_path))
+                result.files_created.extend(write_de_plots(de_table, study_dir / "plots", accession=accession))
+                result.files_created.extend(write_qc_outputs(expression, phenotypes, accession, study_dir / "qc"))
+                try:
+                    result.files_created.extend(list(infer_activities(expression, study_dir / "activity").values()))
+                except StopAndReportError as exc:
+                    result.stop_conditions.append(exc.to_record())
+                result.notes.append(f"{accession} limma significance: {limma_significance_counts(de_table)}")
+                study_results.append(de_table)
+                study_expression[accession] = expression
+                study_phenotypes[accession] = phenotypes
+
+            meta = meta_analyze_signatures(study_results)
+            meta_path = ensure_directory(PHASE2_META_ROOT) / "signature_meta_benchmark.tsv"
+            meta.to_csv(meta_path, sep="\t", index=False)
+            result.files_created.append(str(meta_path))
+            result.notes.append(
+                f"BENCHMARK primary meta: moderated logFC+SE DL; genes={len(meta)}; "
+                f"BH-FDR<0.05={int((meta['bh_fdr'] < 0.05).sum())}"
+            )
+            result.concordance = summarize_concordance(study_results[0], study_results[1])
+            result.notes.append(str(result.concordance.get("plain_statement", "")))
+            boot = bootstrap_meta_signatures(
+                study_expression,
+                study_phenotypes,
+                n_bootstrap=n_bootstrap,
+                seed=0,
+                output_dir=PHASE2_META_ROOT / "bootstrap_benchmark",
+            )
+            result.files_created.extend([boot["summary_path"], boot["index_path"]])
+    except StopAndReportError as exc:
             result.stop_conditions.append(exc.to_record())
             result.notes.append(f"{accession}: activity inference stopped — {exc}")
     return de_table, expression, phenotypes

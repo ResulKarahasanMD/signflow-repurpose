@@ -12,6 +12,8 @@ import requests
 
 from signflow.mapping import GeneRecord, MappingError, validate_gene_record
 
+from .biotype_reference import HgncReference, load_hgnc_reference
+
 from . import PROJECT_ROOT, StopAndReportError, ensure_directory, sha256_bytes
 from .phenotype import parse_series_matrix_samples
 
@@ -167,21 +169,18 @@ def _normalize_gene_type(value: str | None) -> str | None:
 def collapse_probes_to_genes(
     expression: pd.DataFrame,
     annotation: pd.DataFrame,
+    *,
+    biotype_ref: HgncReference | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Collapse probes to genes by max-mean; reject non-protein-coding via validate_gene_record."""
+    """Collapse probes to genes by max-mean; biotype via authoritative HGNC reference."""
+
+    if biotype_ref is None:
+        biotype_ref = load_hgnc_reference()
 
     probe_column = _candidate_column(annotation.columns.tolist(), ["ID", "ID_REF", "probe_id"])
     symbol_column = _candidate_column(
         annotation.columns.tolist(),
         ["Gene symbol", "GENE_SYMBOL", "gene_symbol", "Symbol"],
-    )
-    type_column = _candidate_column(
-        annotation.columns.tolist(),
-        ["gene_type", "Gene type", "gene_biotype", "Biotype"],
-    )
-    ensembl_column = _candidate_column(
-        annotation.columns.tolist(),
-        ["ENSEMBL_ID", "Ensembl ID", "ensembl_id", "Gene ID"],
     )
     if not probe_column or not symbol_column:
         raise StopAndReportError(
@@ -190,49 +189,36 @@ def collapse_probes_to_genes(
             details={"columns": annotation.columns.tolist()},
         )
 
-    keep_columns = [probe_column, symbol_column]
-    if type_column:
-        keep_columns.append(type_column)
-    if ensembl_column:
-        keep_columns.append(ensembl_column)
-    merged = expression.merge(annotation[keep_columns], left_on="probe_id", right_on=probe_column, how="left")
+    merged = expression.merge(annotation[[probe_column, symbol_column]], left_on="probe_id", right_on=probe_column, how="left")
     merged = merged.rename(columns={symbol_column: "gene_symbol"})
-    if type_column:
-        merged = merged.rename(columns={type_column: "gene_type"})
-    else:
-        merged["gene_type"] = None
-    if ensembl_column:
-        merged = merged.rename(columns={ensembl_column: "ensembl_id"})
-    else:
-        merged["ensembl_id"] = ""
-
     probes_in = int(len(expression))
     merged["gene_symbol"] = merged["gene_symbol"].fillna("").astype(str).str.split("///").str[0].str.strip()
-    merged["gene_type"] = merged["gene_type"].map(_normalize_gene_type)
-    unmapped = int(((merged["gene_symbol"] == "") | (merged["gene_symbol"] == "---")).sum())
+    unmapped_probes = int(((merged["gene_symbol"] == "") | (merged["gene_symbol"] == "---")).sum())
     merged = merged[(merged["gene_symbol"] != "") & (merged["gene_symbol"] != "---")]
 
+    status_counts = {
+        "matched": 0,
+        "alias_resolved": 0,
+        "unmatched": 0,
+        "non_coding_rejected": 0,
+        "biotype_unknown": 0,
+    }
     kept_rows = []
-    rejected_noncoding = 0
     for _, row in merged.iterrows():
-        biotype = row["gene_type"]
-        if biotype is None:
+        resolution = biotype_ref.resolve(str(row["gene_symbol"]))
+        status_counts[resolution.status] = status_counts.get(resolution.status, 0) + 1
+        if resolution.status in {"matched", "alias_resolved"}:
+            row = row.copy()
+            row["gene_symbol"] = resolution.approved_symbol
             kept_rows.append(row)
-            continue
-        try:
-            validate_gene_record(
-                GeneRecord(
-                    symbol=str(row["gene_symbol"]),
-                    ensembl_id=str(row.get("ensembl_id") or "UNKNOWN"),
-                    biotype=str(biotype),
-                )
-            )
-            kept_rows.append(row)
-        except MappingError:
-            rejected_noncoding += 1
+        # unmatched / non_coding_rejected / biotype_unknown: do not keep in node universe
 
     if not kept_rows:
-        raise StopAndReportError("All probes were filtered during probe-to-gene mapping", reason="unavailable-files")
+        raise StopAndReportError(
+            "All probes were filtered during probe-to-gene mapping with HGNC biotype reference",
+            reason="unavailable-files",
+            details=status_counts,
+        )
 
     filtered = pd.DataFrame(kept_rows)
     value_columns = [column for column in expression.columns if column != "probe_id"]
@@ -250,10 +236,18 @@ def collapse_probes_to_genes(
             {
                 "probes_in": probes_in,
                 "genes_out": int(len(collapsed)),
-                "unmapped_probes": unmapped,
-                "rejected_non_protein_coding": rejected_noncoding,
+                "unmapped_probes": unmapped_probes,
+                "rejected_non_protein_coding": int(status_counts["non_coding_rejected"]),
+                "biotype_unknown": int(status_counts["biotype_unknown"]),
+                "unmatched_symbols": int(status_counts["unmatched"]),
+                "matched": int(status_counts["matched"]),
+                "alias_resolved": int(status_counts["alias_resolved"]),
                 "many_to_one_collapses": many_to_one,
                 "collapse_rule": "max-mean probe per gene",
+                "biotype_source": "HGNC",
+                "biotype_reference_path": biotype_ref.path,
+                "biotype_reference_sha256": biotype_ref.sha256,
+                "biotype_accessed_at_utc": biotype_ref.accessed_at_utc,
                 "processing_note": AUTHOR_NORMALIZED_NOTE,
             }
         ]
@@ -261,14 +255,43 @@ def collapse_probes_to_genes(
     return collapsed, qc
 
 
-def maybe_log2_transform(expression: pd.DataFrame) -> pd.DataFrame:
-    """Log2-transform strictly positive matrices that appear unlogged."""
+def maybe_log2_transform(expression: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, object]]:
+    """Log2-transform unlogged positive matrices; never silently clip negatives."""
 
     values = expression.to_numpy(dtype=float)
     finite = values[np.isfinite(values)]
-    if finite.size and float(np.nanmax(finite)) > 100:
-        return np.log2(expression.clip(lower=1.0))
-    return expression
+    vmin = float(np.nanmin(finite)) if finite.size else float("nan")
+    vmax = float(np.nanmax(finite)) if finite.size else float("nan")
+    fired = bool(finite.size and vmax > 100)
+    if fired:
+        if np.nanmin(finite) < 0:
+            raise StopAndReportError(
+                "Expression matrix has negative values but appears unlogged; refusing clip(lower=1.0)",
+                reason="negative-clip-forbidden",
+                details={"min": vmin, "max": vmax},
+            )
+        # Floor only exact zeros/near-zeros that are non-negative; assert no negatives exist
+        transformed = np.log2(expression.clip(lower=1.0))
+        after = transformed.to_numpy(dtype=float)
+        after_finite = after[np.isfinite(after)]
+        meta = {
+            "log2_transform_fired": True,
+            "min_before": vmin,
+            "max_before": vmax,
+            "min_after": float(np.nanmin(after_finite)) if after_finite.size else float("nan"),
+            "max_after": float(np.nanmax(after_finite)) if after_finite.size else float("nan"),
+            "negative_clip_asserted": True,
+        }
+        return transformed, meta
+    meta = {
+        "log2_transform_fired": False,
+        "min_before": vmin,
+        "max_before": vmax,
+        "min_after": vmin,
+        "max_after": vmax,
+        "negative_clip_asserted": True,
+    }
+    return expression, meta
 
 
 def process_expression_study(
@@ -307,7 +330,11 @@ def process_expression_study(
             details={"missing_samples": missing_samples},
         )
     table = table[["probe_id", *selected_sample_ids]].copy()
-    table[selected_sample_ids] = maybe_log2_transform(table[selected_sample_ids])
+    transformed, log2_meta = maybe_log2_transform(table[selected_sample_ids])
+    table[selected_sample_ids] = transformed
+    processing_meta.update(log2_meta)
     annotation = load_platform_annotation(platform_id)
-    collapsed, qc = collapse_probes_to_genes(table, annotation)
+    biotype_ref = load_hgnc_reference()
+    processing_meta["biotype_reference"] = biotype_ref.manifest_record()
+    collapsed, qc = collapse_probes_to_genes(table, annotation, biotype_ref=biotype_ref)
     return collapsed, qc, processing_meta

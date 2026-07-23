@@ -70,6 +70,8 @@ def _effects_for_resample(
     selected = pd.DataFrame(selected_data, index=expression.index)
     pheno = pd.DataFrame(groups)
     effects = standardized_effects(selected, pheno)
+    # Bootstrap sensitivity path: unmoderated Hedges' g (primary point estimate is moderated limma meta)
+    effects = effects.rename(columns={"hedges_g": "effect", "hedges_g_se": "se"})
     effects["study"] = study
     return effects
 

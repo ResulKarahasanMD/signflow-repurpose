@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import subprocess
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -29,6 +30,8 @@ def _require_r_limma() -> None:
 
 
 def standardized_effects(expression: pd.DataFrame, phenotype_table: pd.DataFrame) -> pd.DataFrame:
+    """Unmoderated Hedges' g — sensitivity only (not primary meta input)."""
+
     case_ids = phenotype_table.loc[phenotype_table["group"] == "case", "sample_id"].tolist()
     control_ids = phenotype_table.loc[phenotype_table["group"] == "control", "sample_id"].tolist()
     case_values = expression[case_ids].to_numpy(dtype=float)
@@ -45,7 +48,28 @@ def standardized_effects(expression: pd.DataFrame, phenotype_table: pd.DataFrame
     correction = 1.0 - (3.0 / max(4 * (n_case + n_control) - 9, 1))
     hedges_g = cohen_d * correction
     se = np.sqrt(((n_case + n_control) / (n_case * n_control)) + (hedges_g**2 / max(2 * (n_case + n_control - 2), 1)))
-    return pd.DataFrame({"gene_symbol": expression.index, "effect": hedges_g, "se": se, "n_case": n_case, "n_control": n_control})
+    return pd.DataFrame(
+        {
+            "gene_symbol": expression.index,
+            "hedges_g": hedges_g,
+            "hedges_g_se": se,
+            "n_case": n_case,
+            "n_control": n_control,
+        }
+    )
+
+
+def limma_significance_counts(de_table: pd.DataFrame) -> dict[str, int]:
+    fdr = de_table["adj.P.Val"] if "adj.P.Val" in de_table.columns else de_table.get("bh_fdr")
+    if fdr is None:
+        return {"bh_fdr_lt_0.05": 0, "bh_fdr_lt_0.10": 0, "n_genes": int(len(de_table))}
+    return {
+        "bh_fdr_lt_0.05": int((fdr < 0.05).sum()),
+        "bh_fdr_lt_0.10": int((fdr < 0.10).sum()),
+        "n_genes": int(len(de_table)),
+        "nan_moderated_effect": int(de_table["effect"].isna().sum()) if "effect" in de_table.columns else 0,
+        "nan_moderated_se": int(de_table["se"].isna().sum()) if "se" in de_table.columns else 0,
+    }
 
 
 def run_limma_differential_expression(
@@ -54,7 +78,7 @@ def run_limma_differential_expression(
     *,
     accession: str,
 ) -> pd.DataFrame:
-    """Run limma moderated differential expression for one study."""
+    """Run limma moderated DE; primary effect/se are moderated logFC and moderated SE."""
 
     _require_r_limma()
 
@@ -79,8 +103,11 @@ def run_limma_differential_expression(
         import rpy2.robjects as ro
         from rpy2.robjects import pandas2ri
         from rpy2.robjects.conversion import localconverter
-    except Exception as exc:  # pragma: no cover - guarded above
-        raise StopAndReportError(f"rpy2 import failed after dependency check: {exc}. {LIMMA_INSTALL_HINT}", reason="r-limma-missing") from exc
+    except Exception as exc:  # pragma: no cover
+        raise StopAndReportError(
+            f"rpy2 import failed after dependency check: {exc}. {LIMMA_INSTALL_HINT}",
+            reason="r-limma-missing",
+        ) from exc
 
     expr_df = expr.copy()
     expr_df.insert(0, "gene_symbol", expr_df.index)
@@ -103,19 +130,29 @@ def run_limma_differential_expression(
             fit <- contrasts.fit(fit, contrast)
             fit <- eBayes(fit, robust=TRUE)
             tt <- topTable(fit, number=Inf, sort.by="none")
+            coef <- 1
+            tt$moderated_logFC <- as.numeric(fit$coefficients[, coef])
+            tt$moderated_se <- as.numeric(fit$stdev.unscaled[, coef] * sqrt(fit$s2.post))
+            tt$moderated_t <- as.numeric(fit$t[, coef])
+            tt$df_total <- as.numeric(fit$df.total)
             tt$gene_symbol <- rownames(tt)
             tt
             """
         )
         de_table = ro.conversion.get_conversion().rpy2py(result)
 
-    effect_table = standardized_effects(expr, phenotype_table)
-    return de_table.merge(effect_table, on="gene_symbol", how="left").sort_values("P.Value").reset_index(drop=True)
+    # Primary meta inputs: moderated logFC + moderated SE
+    de_table = de_table.rename(columns={})
+    de_table["effect"] = de_table["moderated_logFC"]
+    de_table["se"] = de_table["moderated_se"]
+    # Sensitivity: unmoderated Hedges' g
+    g_table = standardized_effects(expr, phenotype_table)
+    merged = de_table.merge(g_table, on="gene_symbol", how="left")
+    # Drop genes with non-finite moderated SE before meta (counted in QC)
+    return merged.sort_values("P.Value").reset_index(drop=True)
 
 
 def limma_versions() -> dict[str, str]:
-    """Return R and limma versions for the run manifest."""
-
     _require_r_limma()
     import rpy2.robjects as ro
 
@@ -126,12 +163,7 @@ def limma_versions() -> dict[str, str]:
 
 
 def write_de_plots(de_table: pd.DataFrame, output_dir: str | Path, *, accession: str) -> list[str]:
-    """Emit volcano and MA plots for one study DE table."""
-
-    from pathlib import Path
-
     import matplotlib.pyplot as plt
-    import numpy as np
 
     from . import ensure_directory
 
@@ -144,7 +176,7 @@ def write_de_plots(de_table: pd.DataFrame, output_dir: str | Path, *, accession:
     volcano_path = Path(output_dir) / f"{accession}_volcano.png"
     fig, ax = plt.subplots(figsize=(6, 5))
     ax.scatter(logfc, neglog, s=6, alpha=0.4, c="0.3")
-    ax.set_xlabel("log2FC / effect")
+    ax.set_xlabel("moderated log2FC")
     ax.set_ylabel("-log10(P)")
     ax.set_title(f"{accession} volcano")
     fig.tight_layout()
@@ -158,7 +190,7 @@ def write_de_plots(de_table: pd.DataFrame, output_dir: str | Path, *, accession:
         ax.scatter(de_table["AveExpr"], logfc, s=6, alpha=0.4, c="0.3")
         ax.axhline(0, color="0.5", lw=1)
         ax.set_xlabel("AveExpr")
-        ax.set_ylabel("log2FC / effect")
+        ax.set_ylabel("moderated log2FC")
         ax.set_title(f"{accession} MA")
         fig.tight_layout()
         fig.savefig(ma_path, dpi=150)

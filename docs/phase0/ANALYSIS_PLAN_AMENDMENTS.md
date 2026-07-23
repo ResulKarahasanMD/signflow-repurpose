@@ -61,3 +61,16 @@
 | P2.4 | Probe collapse rule = max-mean; non-protein-coding rejection via `validate_gene_record` when biotype present | Matches §B2; GPL570 often omits biotype → rejection count may be 0 with note |
 
 | P2.5 | GSE75214 frozen contrast = **UC active colon vs control colon**; CD/Crohn/inactive UC/ileum excluded (109 samples) | Runtime series characteristics; involved-vs-control chosen over involved-vs-uninvolved |
+
+
+## 2026-07-23 — Phase 2.5 corrections (blocking; pre-Phase 3)
+
+**Outcome-dependent?** Method corrections before accepting Phase 2 headlines; re-freeze after clean-tree re-run.
+
+| ID | Change | Reason |
+|---|---|---|
+| P2.5.1 | Primary meta = DerSimonian–Laird on **limma moderated logFC + moderated SE**; unmoderated Hedges' g demoted to sensitivity | Prior primary discarded eBayes shrinkage required for n=3 controls |
+| P2.5.2 | Concordance restricted to **shared-gene universe**; top-k ranked by moderated t; report k²/N independence expectation; Hedges'g ranking = sensitivity | Prior top-k=0 compared different gene universes / noise-ranked g |
+| P2.5.3 | Probe→gene biotype via **HGNC complete set** (cached); never silently keep when GEO lacks biotype | Both platforms lacked biotype → rejected_non_protein_coding=0 was false |
+| P2.5.4 | BENCHMARK full DE→meta→concordance→bootstrap→activity; emit `signature_meta_benchmark.tsv` | H1 confirmatory track was phenotype-only |
+| P2.5.5 | Record log2 transform fire + min/max; refuse negative clip; vectorize two-study meta; supersede prior `signature_meta.tsv` under `meta/superseded/` | Processing-record gaps |

@@ -95,3 +95,49 @@ Final TARGET and BENCHMARK runs: **`stop_conditions: []`**.
 ## Phase 3 gate
 
 Do **not** begin Phase 3 until this exit report is reviewed/committed and Phase 2 offline tests remain green.
+
+
+---
+
+## Phase 2.5 Addendum (2026-07-23)
+
+**Status:** Corrections A1–A5 implemented and re-run from a **clean tree without `--allow-dirty`**.  
+**Commits:** `5d7d2fa` (Phase 2), `cd967df` / `bec55f0` (Phase 2.5).  
+**plan_hash:** `f09ab91730402e037888d498b4fc67076741f95a9b91b8ac4648b431fc9c272c`
+
+### Phase 1.5 §A precondition checklist
+
+| Item | Status |
+|---|---|
+| A1 `FROZEN_PLAN.yaml` single source of truth + plan-consistency value parsing | **Done** (commit `cfd6704`) |
+| A2 append-only manifests + hard-failing `git_state` | **Done** |
+| A2.4 `plan_hash` (semantic) vs `resolved_config_hash` (full) split | **Done** |
+
+### Numbers retracted as artifacts
+
+| Prior Phase 2 claim | Why artifactual | Replacement |
+|---|---|---|
+| Primary meta **0 genes** at BH-FDR < 0.05 | Meta pooled unmoderated Hedges' g, discarding limma eBayes | Moderated logFC+SE DL meta: **640** genes at BH-FDR < 0.05 (intersection n=16983) |
+| Top-k overlap **0** for k=50/100/250 presented as dramatic discordance | Top-k from full per-study tables (different universes) ranked by noisy abs(g) | Shared-gene only; moderated-t ranking: k50=0 (E=0.15); k100=2 (E=0.59); k250=4 (E=3.68) |
+| `rejected_non_protein_coding: 0` | GEO platforms lack biotype; validate path skipped | HGNC: GSE11783 rejected=3743, unmatched=2910, genes_out=17221; GSE57560 rejected=2753, unmatched=16698, genes_out=18402 (was 32080) |
+
+Prior `signature_meta.tsv` archived under `data/processed/phase2/meta/superseded/`.
+
+### Corrected TARGET headline results
+
+**Per-study limma (BH-FDR):**
+- GSE11783: 775 at <0.05; 1698 at <0.10 (n=17221)
+- GSE57560: 0 at <0.05; 1 at <0.10 (n=18402) — control-limited (n_control=3)
+
+**Primary meta (moderated logFC + moderated SE, DL):** BH-FDR<0.05 = **640** / 16983 shared genes.
+
+**Concordance (shared genes only, moderated ranking):**  
+Moderate shared-gene concordance (Spearman r=0.356); top-k moderated overlap=0 vs independence expectation=0.15. Phenotype mix remains a candidate explanation, not established.  
+Spearman r=0.3557; directional agreement (nominal)=0.7465.  
+Top-k moderated overlaps remain near independence expectation at k=50 and modestly above at k=100/250 — **not** the previously implied absolute discordance from mismatched universes.
+
+**Hedges' g sensitivity:** top-50 overlap with moderated primary = 3 (labelled sensitivity only).
+
+### BENCHMARK
+
+Full DE→meta→concordance→bootstrap path implemented; clean-tree results under `runs/phase2/benchmark/` and `data/processed/phase2/meta/signature_meta_benchmark.tsv`.

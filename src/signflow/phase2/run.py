@@ -427,6 +427,8 @@ def run_phase2(*, track: str, allow_dirty: bool = False, n_bootstrap: int = 1000
         repo_root=".",
         allow_dirty=allow_dirty,
     )
+    result.notes.append("Firewall: Phase 2 did not load disease-gene labels, drugs, or networks.")
+    result.notes.append(f"plan_hash={manifest.get('plan_hash')}")
     run_dirs = sorted(run_root.glob("*_*"))
     if run_dirs:
         summary_file = run_dirs[-1] / "phase2_result.json"
@@ -438,6 +440,4 @@ def run_phase2(*, track: str, allow_dirty: bool = False, n_bootstrap: int = 1000
             result.files_created.append(str(versions_file))
         except Exception:
             pass
-    result.notes.append("Firewall: Phase 2 did not load disease-gene labels, drugs, or networks.")
-    result.notes.append(f"plan_hash={manifest.get('plan_hash')}")
     return result

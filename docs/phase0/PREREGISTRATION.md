@@ -10,7 +10,7 @@
 
 ```
 TAG=prereg-phase0.5
-TAG_COMMIT=<<TAG_TIP>>
+TAG_COMMIT=4d7d63dd39ef76fdf39fb10154465f8bd66f1e24
 PLAN_CONTENT_COMMIT=2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab
 DATE_UTC=2026-07-23
 PLAN_VERSION=0.2.0-phase0.5
@@ -21,4 +21,4 @@ PLAN_VERSION=0.2.0-phase0.5
 OSF or Zenodo deposit of `docs/phase0/ANALYSIS_PLAN.md` (+ amendments, label provenance, methods prior art) should be completed before Phase 2 downloads. Until then, the annotated git tag is the local pre-registration record.
 
 **Manuscript statement (draft):**  
-*The analysis plan (v0.2.0-phase0.5) was timestamped via git tag `prereg-phase0.5` (commit 2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab) on 2026-07-23, prior to Phase 2 data acquisition.*
+*The analysis plan (v0.2.0-phase0.5) was timestamped via git tag `prereg-phase0.5` (commit 4d7d63dd39ef76fdf39fb10154465f8bd66f1e24) on 2026-07-23, prior to Phase 2 data acquisition.*

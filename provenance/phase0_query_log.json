@@ -1,0 +1,153 @@
+{
+  "phase": 0,
+  "access_date_utc": "2026-07-23T16:38:58Z",
+  "verdict": "PASS_CONDITIONAL",
+  "target_disease": {
+    "name": "interstitial cystitis / bladder pain syndrome",
+    "open_targets_id": "MONDO_0018301",
+    "related_efo": "EFO_1000869"
+  },
+  "benchmark_disease": {
+    "name": "ulcerative colitis",
+    "open_targets_id": "MONDO_0005101"
+  },
+  "queries": [
+    {
+      "resource": "NCBI_GEO_GDS",
+      "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+      "term": "(interstitial cystitis[Title]) AND (Expression profiling by array[DataSet Type] OR Expression profiling by high throughput sequencing[DataSet Type])",
+      "count": 8,
+      "accessions": [
+        "GSE328464",
+        "GSE310557",
+        "GSE238208",
+        "GSE57560",
+        "GSE28242",
+        "GSE11783",
+        "GSE11839",
+        "GSE621"
+      ]
+    },
+    {
+      "resource": "ClinicalTrials.gov_API_v2",
+      "endpoint": "https://clinicaltrials.gov/api/v2/studies",
+      "query_cond": "Interstitial Cystitis",
+      "totalCount": 238
+    },
+    {
+      "resource": "OpenTargets_GraphQL",
+      "endpoint": "https://api.platform.opentargets.org/api/v4/graphql",
+      "disease_id": "MONDO_0018301",
+      "associatedTargets_count": 514,
+      "drugAndClinicalCandidates_count": 49,
+      "approval_stage_example": {
+        "name": "PENTOSAN POLYSULFATE SODIUM",
+        "chembl_id": "CHEMBL1201516",
+        "maxClinicalStage": "APPROVAL"
+      }
+    },
+    {
+      "resource": "OpenTargets_GraphQL",
+      "endpoint": "https://api.platform.opentargets.org/api/v4/graphql",
+      "disease_id": "MONDO_0005101",
+      "associatedTargets_count": 7161,
+      "drugAndClinicalCandidates_count": 245
+    },
+    {
+      "resource": "STRING",
+      "endpoint": "https://string-db.org/api/json/version",
+      "string_version": "12.0"
+    },
+    {
+      "resource": "OmniPath",
+      "endpoint": "https://omnipathdb.org/interactions",
+      "fields_verified": [
+        "is_directed",
+        "is_stimulation",
+        "is_inhibition"
+      ]
+    },
+    {
+      "resource": "DGIdb",
+      "endpoint": "https://dgidb.org/api/graphql",
+      "http_status": 200,
+      "note": "Legacy /api/v2/ returns SPA HTML; use GraphQL"
+    },
+    {
+      "resource": "PubMed",
+      "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi",
+      "term": "(\"interstitial cystitis\"[Title] OR \"bladder pain syndrome\"[Title]) AND (repurpos*[Title/Abstract] OR \"connectivity map\"[Title/Abstract] OR bioinformatic*[Title/Abstract] OR \"machine learning\"[Title/Abstract])",
+      "count": 50
+    }
+  ],
+  "primary_target_cohorts": [
+    {
+      "accession": "GSE11783",
+      "n_arrays": 16,
+      "platform": "GPL570",
+      "controls": 6,
+      "ic_non_ulcer": 5,
+      "ic_ulcer": 5,
+      "pubmed": "19400928"
+    },
+    {
+      "accession": "GSE57560",
+      "n_arrays": 16,
+      "platform": "GPL16699",
+      "ic": 13,
+      "controls": 3,
+      "pubmed": "24840534"
+    }
+  ],
+  "notes": [
+    "GSE238208 is HIC vs BCG \u2014 not counted as healthy case-control",
+    "GSE310557 is scRNA-seq \u2014 optional only",
+    "Small n and paired biopsies require patient-aware DE (see ANALYSIS_PLAN)"
+  ],
+  "phase0_5_amendment_utc": "2026-07-23",
+  "label_filter": {
+    "endpoint": "https://api.platform.opentargets.org/api/v4/graphql",
+    "primary_threshold": 0.3,
+    "IC": {
+      "disease_id": "MONDO_0018301",
+      "allowlist": [
+        "animal_model"
+      ],
+      "exclude": [
+        "clinical",
+        "literature"
+      ],
+      "n_assoc": 514,
+      "n_positives_primary": 38,
+      "track_decision": "unsupervised_primary"
+    },
+    "UC": {
+      "disease_id": "MONDO_0005101",
+      "allowlist": [
+        "genetic_association"
+      ],
+      "exclude": [
+        "clinical",
+        "literature",
+        "rna_expression",
+        "genetic_literature"
+      ],
+      "n_assoc": 7161,
+      "n_positives_primary": 396,
+      "track_decision": "supervised_primary"
+    }
+  },
+  "methods_prior_art_pmids_verified": [
+    "39322717",
+    "31728204",
+    "33075380",
+    "28628322",
+    "24797111",
+    "31340985",
+    "29295995",
+    "36699385",
+    "36732524",
+    "26831545",
+    "30002366"
+  ]
+}

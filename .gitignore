@@ -1,0 +1,30 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Patient-level / raw omics and licensed files (never commit)
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+*.h5ad
+*.rds
+*.RData
+.env
+**/DrugBank*.xml
+**/*secret*
+**/credentials*
+
+# Run outputs with large artifacts
+runs/**
+!runs/.gitkeep
+*.pt
+*.pth
+*.ckpt

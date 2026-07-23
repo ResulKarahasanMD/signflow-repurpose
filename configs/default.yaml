@@ -1,0 +1,67 @@
+project:
+  name: signflow-repurpose
+  phase: 1
+  analysis_plan_version: 0.3.0-phase0.6
+
+runtime:
+  python_version: "3.12"
+  device_preference: auto
+  pytorch_enable_mps_fallback_note: Set PYTORCH_ENABLE_MPS_FALLBACK=1 when using Apple Silicon MPS.
+
+provenance:
+  allow_dirty: false
+
+plan:
+  label_score_threshold: 0.30
+  label_score_sensitivities: [0.20, 0.40]
+  conformal_alpha: 0.10
+  conformal_alpha_sensitivities: [0.05, 0.20]
+  null_permutations: 1000
+  signature_bootstraps: 1000
+  triangulation_k_primary: 20
+  triangulation_k_alternate: 50
+  random_seeds: [0, 1, 2, 3, 4]
+  module_sizes: [50, 100, 250]
+  label_adjudication_n: 15
+  h7_futility_j: 0.20
+  benchmark_disease_id: MONDO_0005101
+  target_disease_id: MONDO_0018301
+  benchmark_cohorts: [GSE75214, GSE87466]
+  target_primary_cohorts: [GSE11783, GSE57560]
+  target_inflammation_control: GSE238208
+  target_scrna: GSE310557
+  gse11783_primary_site: non-ulcer
+  uc_genetics_allowlist: [genetic_association]
+  uc_genetics_exclude: [clinical, literature, rna_expression, genetic_literature]
+  benchmark_convergence_excludes: [genetics]
+  target_animal_model_status: dropped
+  frozen_counts:
+    uc_genetics_primary: 396
+    ic_animal_model_primary: 38
+
+resources:
+  open_targets:
+    endpoint: https://api.platform.opentargets.org/api/v4/graphql
+  geo:
+    esearch_endpoint: https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi
+    target_search_term: (interstitial cystitis[Title]) AND (Expression profiling by array[DataSet Type] OR Expression profiling by high throughput sequencing[DataSet Type])
+  omnipath:
+    endpoint: https://omnipathdb.org/interactions
+    params:
+      genesymbols: 1
+      fields: is_directed,is_stimulation,is_inhibition
+      format: json
+      limit: 5
+  signor:
+    endpoint: https://signor.uniroma2.it/downloads.php
+  string:
+    endpoint: https://string-db.org/api/json/version
+  dgidb:
+    endpoint: https://dgidb.org/api/graphql
+  chembl:
+    endpoint: https://www.ebi.ac.uk/chembl/api/data/status.json
+  clinicaltrials:
+    endpoint: https://clinicaltrials.gov/api/v2/studies
+  best_effort:
+    gtex: https://gtexportal.org/home/
+    hpa: https://www.proteinatlas.org/

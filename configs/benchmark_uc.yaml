@@ -1,0 +1,11 @@
+extends: default.yaml
+
+profile:
+  name: benchmark_uc
+  track: benchmark
+
+plan:
+  active_disease_id: MONDO_0005101
+  active_cohorts: [GSE75214, GSE87466]
+  triangulation_includes: [network_flow, l1000, tissue_cell]
+  triangulation_excludes: [genetics]

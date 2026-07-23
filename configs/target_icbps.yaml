@@ -1,0 +1,11 @@
+extends: default.yaml
+
+profile:
+  name: target_icbps
+  track: target
+
+plan:
+  active_disease_id: MONDO_0018301
+  active_cohorts: [GSE11783, GSE57560]
+  primary_path: unsupervised
+  target_animal_model_status: dropped

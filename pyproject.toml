@@ -1,0 +1,47 @@
+[project]
+name = "signflow-repurpose"
+version = "0.1.0"
+description = "Phase 1 infrastructure for the SignFlow-Repurpose project"
+readme = "README.md"
+authors = [
+    { name = "ResulKarahasanMD" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "decoupler",
+    "gseapy",
+    "matplotlib",
+    "networkx",
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "pydeseq2",
+    "pyyaml",
+    "pytest",
+    "requests",
+    "scikit-learn",
+    "scipy",
+    "statsmodels",
+    "torch",
+    "torch-geometric",
+    "typing-extensions",
+    "types-pyyaml",
+    "types-requests",
+]
+
+[project.scripts]
+signflow = "signflow.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "src"
+module-name = "signflow"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+markers = [
+    "live: tests that hit remote resources",
+]

@@ -9,6 +9,7 @@ wheels/
 
 # Virtual environments
 .venv
+.python-version
 
 # Patient-level / raw omics and licensed files (never commit)
 data/raw/**

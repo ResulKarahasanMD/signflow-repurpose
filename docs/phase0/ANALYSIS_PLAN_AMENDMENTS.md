@@ -104,3 +104,12 @@
 | P3.5.1 | Apply `retain_as_ambiguous` after OmniPath∪SIGNOR merge on ordered (source,target); assert unique pairs | Defect fix — rule was applied only to OmniPath-internal conflicts |
 | P3.5.2 | Redefine CollecTRI/PROGENy gene features with coverage indicators; density QC; variance gate (`feature_min_variance`) | Dead zero-filled columns falsely implied W4 activity fix |
 | P3.5.3 | Freeze Phase 5 proximity substrate: primary=`signed_causal_only`, sensitivity=`causal_plus_string_unsigned`; min targets=1; poor coverage → report limitation, do not switch | Blind to drug data (A4) |
+
+
+## 2026-07-23 — Phase 4
+
+**Outcome-dependent?** No frozen constants changed. H1 W1 rule applied as pre-registered (including negative verdict).
+
+| ID | Change | Reason |
+|---|---|---|
+| P4.0 | Phase 4 build: baselines + R-GCN/GATv2 + SSL + Mondrian CP + TARGET seed propagation; splits loaded by hash | Execute frozen Phase 4 protocol on corrected Phase 3.5 artifacts |

@@ -68,9 +68,10 @@ Mondrian conformal gene/drug sets achieve empirical coverage ≥ 1−α **and** 
 ### H6 — secondary (triangulation)
 At **k=20** (also k=50), convergence rank recovers more UC gold-standard drugs than any single axis, tested by **bootstrap resampling over the gold-standard drug set** (*B*≥1000): one-sided *p* that enrichment@k(convergence) > max_axis enrichment@k. Decision: reject null at α=0.05 for secondary claim; if not, report no advantage.
 
-### H7 — DESCRIPTIVE (TARGET)
-IC/BPS yields a hypothesis-generating unsupervised module + drug set with transparent axis disagreements; soft positives reported where they land — not forced.  
-**Futility (A6.6):** if signature-bootstrap top-20 drug Jaccard < **J = 0.20**, report TARGET as **non-informative** (stability stats + disagreements only; **no ranked candidate list as a finding**).
+### H7 — DESCRIPTIVE (TARGET) — unsupervised only
+IC/BPS has **no usable curated disease-gene labels** after A6.1 (`plausible-ICBPS`=6 < N=15; `animal_model` dropped). H7 is therefore **unsupervised-only**: signature-extreme seeds → module → drug scoring → triangulation, with soft positives reported where they land — not forced.  
+**Futility (A6.6):** if signature-bootstrap top-20 drug Jaccard < **J = 0.20**, report TARGET as **non-informative** (stability stats + disagreements only; **no ranked candidate list as a finding**).  
+**Mandatory defences (Phase 1.5):** with no supervised anchor, **GSE238208 inflammation-specificity** and the **permuted-signature null** are the primary checks against reporting graph topology as disease biology. Failure of either is a **reportable negative result** — not optional.
 
 ---
 

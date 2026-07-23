@@ -79,7 +79,9 @@ Task definitions (nodes/edges/features/labels/outputs/falsifiers) remain as in P
 | Variable | Default |
 |---|---|
 | BENCHMARK | `MONDO_0005101` (UC) — confirmatory H1 |
-| TARGET | `MONDO_0018301` (IC/BPS) — descriptive H7; unsupervised primary |
+| TARGET | `MONDO_0018301` (IC/BPS) — H7 **unsupervised-only**; **no curated labels** after adjudication (6&lt;N=15) |
+
+**Reported evidence-base finding:** *The absence of usable curated IC/BPS disease-gene labels under non-drug, non-literature Open Targets evidence is itself a result.* With no supervised TARGET anchor, GSE238208 inflammation-specificity and the permuted-signature null are **mandatory** defences against topology-as-biology.
 | Primary bulk | GSE11783 + GSE57560 |
 | Planned controls | GSE238208 (inflammation specificity); GSE310557 (cell type) |
 

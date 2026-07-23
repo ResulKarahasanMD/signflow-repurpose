@@ -26,5 +26,4 @@ git show prereg-phase0.5
 | **Phase 0.6 commit** | `d2e4bef71b7f924db761bbfb9c10603df82b17a2` |
 | **Date (UTC)** | 2026-07-23 |
 
-**Manuscript statement (draft):**  
-*The analysis plan was pre-registered prior to Phase 2 data acquisition via public GitHub Gist receipts (Phase 0.5: https://gist.github.com/ResulKarahasanMD/f3d6af1db8b405f24b0026e1e13315ce ; Phase 0.6: https://gist.github.com/ResulKarahasanMD/958b8c80430732caff2bada19b5b2c6d), with local git tag `prereg-phase0.5` and plan-content commit `2b1a39af…`. Phase 0.6 locks (label adjudication, UC cohorts, futility J) were recorded before Phase 1/2 execution.*
+**Phase 2 download gate:** **CLEARED** — external receipts above are HTTP 200 as of 2026-07-23 (re-verified before Phase 2). Public GitHub Gists are the external timestamp (immutable content at gist URLs); local tag alone is not relied upon. OSF/Zenodo DOI remains optional enhancement.

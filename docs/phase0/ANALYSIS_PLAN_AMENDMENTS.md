@@ -34,3 +34,16 @@
 | A6.6 | GSE11783 primary = **non-ulcer**; H7 futility **J=0.20**; GSE310557 re-verified | Comparability; descriptive ≠ unbounded |
 
 **Further weakened:** TARGET supervised path **cancelled**. Publishable finding: no usable curated IC/BPS labels under non-drug/non-literature evidence.
+
+---
+
+## 2026-07-23 — Phase 1.5 (pre-Phase 2)
+
+**Outcome-dependent?** No.
+
+| ID | Change | Reason |
+|---|---|---|
+| 0.1 | Phase 2 download gate cleared after re-verifying public gist receipts | External timestamp required before analysis data download |
+| 0.2 | H7 unsupervised-only; mandatory GSE238208 + permuted-signature defences | No TARGET labels after A6.1 |
+| A1 | `FROZEN_PLAN.yaml` single source of truth; value-parsing plan-consistency | Substring tests were not real invariants |
+| A2–A4 | Append-only manifests; no hardcoded allow-dirty; hard-fail git; plan_hash; device warnings; real GTEx/HPA/SIGNOR checks; seeding; tmp_path tests | Phase 1 defects |

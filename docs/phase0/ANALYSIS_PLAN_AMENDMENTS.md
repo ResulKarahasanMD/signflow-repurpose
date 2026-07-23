@@ -90,3 +90,6 @@
 | P2.6.4 | Abundance-regressed cross-cohort correlation diagnostic | Distinguish shared technical gradient from disease signature |
 | P2.6.5 | Benchmark concordance recorded as positive-control validation of the concordance metric | Makes TARGET near-chance top-k interpretable |
 | P3.0 | Edge sign-conflict rule frozen: **retain_as_ambiguous** | Pre-registration before inspecting conflict counts |
+
+| P3.1 | STRING auxiliary score floor frozen at **400** (physical links layer separate) | Pre-inspection; auxiliary undirected layer only |
+| P3.2 | Phase 3 CV folds=5; control-graph seed=0; degree-match tolerance=0.15 | Pre-inspection split/control hyperparameters |

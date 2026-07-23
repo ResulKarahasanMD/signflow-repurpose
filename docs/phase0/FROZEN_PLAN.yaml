@@ -55,3 +55,7 @@ plan:
   target_seed_sensitivity_n: 50
   target_seed_sensitivity_i2_max: 50.0
   edge_sign_conflict_rule: retain_as_ambiguous
+  string_score_min: 400
+  phase3_cv_folds: 5
+  phase3_control_seed: 0
+  degree_match_tolerance: 0.15

@@ -1,0 +1,28 @@
+plan:
+  # Authoritative machine-readable copy of the pre-registered Phase 0 constants.
+  label_score_threshold: 0.30
+  label_score_sensitivities: [0.20, 0.40]
+  conformal_alpha: 0.10
+  conformal_alpha_sensitivities: [0.05, 0.20]
+  null_permutations: 1000
+  signature_bootstraps: 1000
+  triangulation_k_primary: 20
+  triangulation_k_alternate: 50
+  random_seeds: [0, 1, 2, 3, 4]
+  module_sizes: [50, 100, 250]
+  label_adjudication_n: 15
+  h7_futility_j: 0.20
+  benchmark_disease_id: MONDO_0005101
+  target_disease_id: MONDO_0018301
+  benchmark_cohorts: [GSE75214, GSE87466]
+  target_primary_cohorts: [GSE11783, GSE57560]
+  target_inflammation_control: GSE238208
+  target_scrna: GSE310557
+  gse11783_primary_site: non-ulcer
+  uc_genetics_allowlist: [genetic_association]
+  uc_genetics_exclude: [clinical, literature, rna_expression, genetic_literature]
+  triangulation_excludes: [genetics]
+  target_animal_model_status: dropped
+  frozen_counts:
+    uc_genetics_primary: 396
+    ic_animal_model_primary: 38

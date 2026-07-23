@@ -105,18 +105,22 @@ def choose_device(cuda_available: bool, mps_available: bool) -> str:
     return "cpu"
 
 
-def resolve_device(preferred: str = "auto") -> str:
+def resolve_device(preferred: str = "auto") -> tuple[str, str | None]:
     preferred = preferred.lower()
     mps_available = bool(getattr(torch.backends, "mps", None)) and torch.backends.mps.is_available()
 
     if preferred == "auto":
-        return choose_device(torch.cuda.is_available(), mps_available)
+        return choose_device(torch.cuda.is_available(), mps_available), None
     if preferred == "cuda":
-        return "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            return "cuda", None
+        return "cpu", "Requested device 'cuda' is unavailable; using cpu."
     if preferred == "mps":
-        return "mps" if mps_available else "cpu"
+        if mps_available:
+            return "mps", None
+        return "cpu", "Requested device 'mps' is unavailable; using cpu."
     if preferred == "cpu":
-        return "cpu"
+        return "cpu", None
     raise ConfigError(f"Unsupported device preference: {preferred}")
 
 
@@ -128,20 +132,49 @@ def get_seed_list(config: dict[str, Any]) -> list[int]:
 
 
 def seed_all(seed: int) -> dict[str, int]:
+    os.environ["PYTHONHASHSEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    torch.use_deterministic_algorithms(True, warn_only=True)
+
+    seeded = {"python": seed, "python_hash_seed": seed, "numpy": seed, "torch": seed}
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
-    return {"python": seed, "numpy": seed, "torch": seed}
+        seeded["torch_cuda"] = seed
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    mps = getattr(torch, "mps", None)
+    if mps is not None and hasattr(mps, "manual_seed"):
+        mps.manual_seed(seed)
+        seeded["torch_mps"] = seed
+
+    return seeded
 
 
 def canonical_config_json(config: dict[str, Any]) -> str:
     return json.dumps(config, sort_keys=True, separators=(",", ":"))
 
 
-def config_hash(config: dict[str, Any]) -> str:
+def semantic_config(config: dict[str, Any]) -> dict[str, Any]:
+    semantic = copy.deepcopy(config)
+    semantic.pop("runtime", None)
+    return semantic
+
+
+def plan_hash(config: dict[str, Any]) -> str:
+    return hashlib.sha256(canonical_config_json(semantic_config(config)).encode("utf-8")).hexdigest()
+
+
+def resolved_config_hash(config: dict[str, Any]) -> str:
     return hashlib.sha256(canonical_config_json(config).encode("utf-8")).hexdigest()
+
+
+def config_hash(config: dict[str, Any]) -> str:
+    """Backward-compatible alias for the full resolved configuration hash."""
+    return resolved_config_hash(config)
 
 
 def load_config(config_path: str | Path, overrides: list[str] | None = None) -> dict[str, Any]:
@@ -154,10 +187,16 @@ def load_config(config_path: str | Path, overrides: list[str] | None = None) -> 
     runtime = config.setdefault("runtime", {})
     runtime.setdefault("python_version", "3.12")
     runtime.setdefault("device_preference", "auto")
-    runtime["device"] = resolve_device(runtime["device_preference"])
+    device, warning = resolve_device(runtime["device_preference"])
+    runtime["device"] = device
     runtime["pytorch_enable_mps_fallback"] = os.environ.get("PYTORCH_ENABLE_MPS_FALLBACK", "1")
     runtime.setdefault(
         "pytorch_enable_mps_fallback_note",
         "Set PYTORCH_ENABLE_MPS_FALLBACK=1 when using Apple Silicon MPS.",
     )
+    warnings = runtime.setdefault("warnings", [])
+    if not isinstance(warnings, list):
+        raise ConfigError("runtime.warnings must be a list")
+    if warning:
+        warnings.append(warning)
     return config

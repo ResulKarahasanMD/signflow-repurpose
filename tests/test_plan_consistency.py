@@ -1,48 +1,232 @@
+import re
 from pathlib import Path
+
+import yaml
 
 from signflow.config import load_config
 
+FROZEN_PLAN_PATH = Path("docs/phase0/FROZEN_PLAN.yaml")
+ANALYSIS_PLAN_PATH = Path("docs/phase0/ANALYSIS_PLAN.md")
+LABEL_PROVENANCE_PATH = Path("docs/phase0/LABEL_PROVENANCE.md")
+LABEL_ADJUDICATION_PATH = Path("docs/phase0/LABEL_ADJUDICATION.md")
 
-def test_frozen_plan_constants_match_docs():
-    config = load_config("configs/default.yaml")
-    analysis_plan = Path("docs/phase0/ANALYSIS_PLAN.md").read_text()
-    label_provenance = Path("docs/phase0/LABEL_PROVENANCE.md").read_text()
-    adjudication = Path("docs/phase0/LABEL_ADJUDICATION.md").read_text()
 
-    assert "`0.30`" in analysis_plan
-    assert "**≥ 0.30**" in label_provenance
-    assert "**N (minimum `plausible-ICBPS`)** | **15**" in adjudication
-    assert "| `H7_FUTILITY_J` | `0.20` |" in analysis_plan
-    assert "`MONDO_0005101`" in analysis_plan
-    assert "`MONDO_0018301`" in analysis_plan
-    assert "GSE75214`, `GSE87466" in analysis_plan
-    assert "GSE11783`, `GSE57560" in analysis_plan
-    assert "**396**" in label_provenance
-    assert "**38**" in label_provenance
+def _read_text(path: Path) -> str:
+    return path.read_text()
 
-    plan = config["plan"]
-    assert plan["label_score_threshold"] == 0.30
-    assert plan["label_score_sensitivities"] == [0.20, 0.40]
-    assert plan["conformal_alpha"] == 0.10
-    assert plan["conformal_alpha_sensitivities"] == [0.05, 0.20]
-    assert plan["null_permutations"] == 1000
-    assert plan["signature_bootstraps"] == 1000
-    assert plan["triangulation_k_primary"] == 20
-    assert plan["triangulation_k_alternate"] == 50
-    assert plan["random_seeds"] == [0, 1, 2, 3, 4]
-    assert plan["module_sizes"] == [50, 100, 250]
-    assert plan["label_adjudication_n"] == 15
-    assert plan["h7_futility_j"] == 0.20
-    assert plan["benchmark_disease_id"] == "MONDO_0005101"
-    assert plan["target_disease_id"] == "MONDO_0018301"
-    assert plan["benchmark_cohorts"] == ["GSE75214", "GSE87466"]
-    assert plan["target_primary_cohorts"] == ["GSE11783", "GSE57560"]
-    assert plan["target_inflammation_control"] == "GSE238208"
-    assert plan["target_scrna"] == "GSE310557"
-    assert plan["gse11783_primary_site"] == "non-ulcer"
-    assert plan["uc_genetics_allowlist"] == ["genetic_association"]
-    assert plan["uc_genetics_exclude"] == ["clinical", "literature", "rna_expression", "genetic_literature"]
-    assert plan["benchmark_convergence_excludes"] == ["genetics"]
-    assert plan["target_animal_model_status"] == "dropped"
-    assert plan["frozen_counts"]["uc_genetics_primary"] == 396
-    assert plan["frozen_counts"]["ic_animal_model_primary"] == 38
+
+def _read_frozen_plan() -> dict[str, object]:
+    return yaml.safe_load(FROZEN_PLAN_PATH.read_text())["plan"]
+
+
+def _require_match(pattern: str, text: str, key: str) -> re.Match[str]:
+    match = re.search(pattern, text, re.MULTILINE)
+    if not match:
+        raise AssertionError(f"Missing doc regex match for {key}")
+    return match
+
+
+def _parse_backticked_list(cell: str) -> list[str]:
+    values = re.findall(r"`([^`]+)`", cell)
+    if values:
+        return [value.strip().strip("{}") for value in values]
+    values = [value.strip().strip("`").strip("{}") for value in cell.split(",") if value.strip()]
+    if not values:
+        raise AssertionError(f"Unable to parse list cell: {cell}")
+    return values
+
+
+def _assert_triplet(key: str, doc_value: object, frozen_plan: dict[str, object], config_plan: dict[str, object]) -> None:
+    frozen_value = frozen_plan[key]
+    config_value = config_plan[key]
+    assert doc_value == frozen_value == config_value, (
+        f"{key} mismatch: doc={doc_value!r} frozen={frozen_value!r} config={config_value!r}"
+    )
+
+
+def _assert_nested_triplet(
+    parent_key: str,
+    child_key: str,
+    doc_value: object,
+    frozen_plan: dict[str, object],
+    config_plan: dict[str, object],
+) -> None:
+    frozen_value = frozen_plan[parent_key][child_key]
+    config_value = config_plan[parent_key][child_key]
+    assert doc_value == frozen_value == config_value, (
+        f"{parent_key}.{child_key} mismatch: doc={doc_value!r} frozen={frozen_value!r} config={config_value!r}"
+    )
+
+
+def test_frozen_plan_matches_config_and_docs():
+    frozen_plan = _read_frozen_plan()
+    config_plan = load_config("configs/default.yaml")["plan"]
+    analysis_plan = _read_text(ANALYSIS_PLAN_PATH)
+    label_provenance = _read_text(LABEL_PROVENANCE_PATH)
+    adjudication = _read_text(LABEL_ADJUDICATION_PATH)
+
+    covered_keys: set[str] = set()
+    for key, frozen_value in frozen_plan.items():
+        assert key in config_plan, f"Config missing frozen key {key}"
+        assert config_plan[key] == frozen_value, (
+            f"{key} mismatch between frozen plan and config: "
+            f"frozen={frozen_value!r} config={config_plan[key]!r}"
+        )
+        covered_keys.add(key)
+
+    _assert_triplet(
+        "label_score_threshold",
+        float(_require_match(r"\| `LABEL_SCORE_THRESHOLD` \| `([0-9.]+)` \|", analysis_plan, "label_score_threshold").group(1)),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "label_score_sensitivities",
+        [
+            float(_require_match(r"\| Sensitivity low \| ≥ ([0-9.]+) \|", label_provenance, "label_score_sensitivities.low").group(1)),
+            float(_require_match(r"\| Sensitivity high \| ≥ ([0-9.]+) \|", label_provenance, "label_score_sensitivities.high").group(1)),
+        ],
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "random_seeds",
+        [
+            int(value)
+            for value in _require_match(r"\| `RANDOM_SEEDS` \| `\{([0-9,]+)\}` \|", analysis_plan, "random_seeds")
+            .group(1)
+            .split(",")
+        ],
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "label_adjudication_n",
+        int(
+            _require_match(
+                r"\| \*\*N \(minimum `plausible-ICBPS`\)\*\* \| \*\*([0-9]+)\*\* \|",
+                adjudication,
+                "label_adjudication_n",
+            ).group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "h7_futility_j",
+        float(_require_match(r"\| `H7_FUTILITY_J` \| `([0-9.]+)` \|", analysis_plan, "h7_futility_j").group(1)),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "benchmark_disease_id",
+        _require_match(r"\| `BENCHMARK_DISEASE_ID` \| `([^`]+)` \|", analysis_plan, "benchmark_disease_id").group(1),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "target_disease_id",
+        _require_match(r"\| `TARGET_DISEASE_ID` \| `([^`]+)` \|", analysis_plan, "target_disease_id").group(1),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "benchmark_cohorts",
+        _parse_backticked_list(
+            _require_match(r"\| `BENCHMARK_COHORTS` \| ([^|]+) \|", analysis_plan, "benchmark_cohorts").group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "target_primary_cohorts",
+        _parse_backticked_list(
+            _require_match(r"\| `TARGET_PRIMARY_COHORTS` \| ([^|]+) \|", analysis_plan, "target_primary_cohorts").group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "target_inflammation_control",
+        _require_match(r"\| `TARGET_INFLAMMATION_CONTROL` \| `([^`]+)` \|", analysis_plan, "target_inflammation_control").group(1),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "target_scrna",
+        _require_match(r"\| `TARGET_SCRNA` \| `([^`]+)` \|", analysis_plan, "target_scrna").group(1),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "gse11783_primary_site",
+        _require_match(r"\| `GSE11783_PRIMARY_SITE` \| `([^`]+)` \|", analysis_plan, "gse11783_primary_site").group(1),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "uc_genetics_allowlist",
+        _parse_backticked_list(
+            _require_match(
+                r"\| BENCHMARK \| `MONDO_0005101` \| ([^|]+) \| [^|]+ \|",
+                label_provenance,
+                "uc_genetics_allowlist",
+            ).group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "uc_genetics_exclude",
+        _parse_backticked_list(
+            _require_match(
+                r"\| BENCHMARK \| `MONDO_0005101` \| [^|]+ \| ([^|]+) \|",
+                label_provenance,
+                "uc_genetics_exclude",
+            ).group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_triplet(
+        "target_animal_model_status",
+        "dropped"
+        if _require_match(
+            r"DROP `animal_model` from TARGET labels entirely",
+            adjudication,
+            "target_animal_model_status",
+        )
+        else "missing",
+        frozen_plan,
+        config_plan,
+    )
+    _assert_nested_triplet(
+        "frozen_counts",
+        "uc_genetics_primary",
+        int(
+            _require_match(
+                r"\| UC \| `genetic_association` only \| [0-9]+ \| \*\*([0-9]+)\*\* \| [0-9]+ \|",
+                label_provenance,
+                "frozen_counts.uc_genetics_primary",
+            ).group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+    _assert_nested_triplet(
+        "frozen_counts",
+        "ic_animal_model_primary",
+        int(
+            _require_match(
+                r"\| IC/BPS \| `animal_model` only \| [0-9]+ \| \*\*([0-9]+)\*\* \| [0-9]+ \|",
+                label_provenance,
+                "frozen_counts.ic_animal_model_primary",
+            ).group(1)
+        ),
+        frozen_plan,
+        config_plan,
+    )
+
+    assert covered_keys == set(frozen_plan), (
+        f"Frozen plan keys missing assertion coverage: {sorted(set(frozen_plan) - covered_keys)}"
+    )

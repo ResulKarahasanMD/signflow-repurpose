@@ -303,9 +303,10 @@ def verify_signor(config: dict[str, Any], session: requests.Session) -> Resource
             "signor",
             endpoint,
             True,
-            "ok",
+            "not_verified",
             latency_s=round(time.perf_counter() - started, 3),
-            details={"http_status": response.status_code},
+            warning="Portal reachability confirmed only; no pinned SIGNOR data-file endpoint is verified yet.",
+            details={"http_status": response.status_code, "verification_scope": "download_portal_only"},
         )
     except Exception as exc:  # pragma: no cover - exercised by live runs
         return _record("signor", endpoint, False, "error", error=str(exc), latency_s=round(time.perf_counter() - started, 3))
@@ -376,9 +377,10 @@ def verify_gtex_hpa(config: dict[str, Any], session: requests.Session) -> list[R
                     name,
                     endpoint,
                     True,
-                    "ok",
+                    "not_verified",
                     latency_s=round(time.perf_counter() - started, 3),
-                    details={"http_status": response.status_code},
+                    warning="Site reachability confirmed only; no pinned GTEx/HPA data endpoint is verified yet.",
+                    details={"http_status": response.status_code, "verification_scope": "site_only"},
                 )
             )
         except Exception as exc:  # pragma: no cover - exercised by live runs
@@ -386,11 +388,11 @@ def verify_gtex_hpa(config: dict[str, Any], session: requests.Session) -> list[R
                 _record(
                     name,
                     endpoint,
-                    True,
-                    "warning",
+                    False,
+                    "error",
                     latency_s=round(time.perf_counter() - started, 3),
-                    warning=f"Best-effort check failed: {exc}",
-                    details={"best_effort": True},
+                    error=str(exc),
+                    details={"verification_scope": "site_only"},
                 )
             )
     return records

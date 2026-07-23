@@ -18,6 +18,13 @@ Explicitly not implemented in Phase 1:
 - Models
 - Bulk data downloads
 
+## Phase 1.5 Follow-Up
+
+- `docs/phase0/FROZEN_PLAN.yaml` is now the authoritative machine-readable source for all frozen plan constants; `configs/default.yaml` derives from it.
+- Run manifests are now append-only under `runs/<command>/<UTC-timestamp>_<plan_hash8>/run_manifest.json`, with hard-fail git detection, split `plan_hash` vs `resolved_config_hash`, and separate `runtime_environment` recording.
+- Wrapper scripts no longer hardcode `--allow-dirty`; manifest-writing tests use `tmp_path`; config seeding and plan-consistency assertions were tightened.
+- GTEx, HPA, and SIGNOR site-only checks no longer report `ok`; they surface `not_verified` until pinned data endpoints are verified.
+
 ## Files Created
 
 - `src/signflow/__init__.py`

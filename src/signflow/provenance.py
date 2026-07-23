@@ -10,15 +10,23 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any
 
-from .config import config_hash, get_seed_list
+from .config import get_seed_list, plan_hash, resolved_config_hash
 
 
 class DirtyRepositoryError(RuntimeError):
     """Raised when writing a manifest from a dirty repository."""
 
 
+class GitStateError(RuntimeError):
+    """Raised when git metadata cannot be resolved for a manifest write."""
+
+
 def utc_now_iso() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def utc_now_path_component() -> str:
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
 
 
 def sha256_file(path: str | Path) -> str:
@@ -48,6 +56,10 @@ def git_state(repo_root: str | Path = ".") -> dict[str, Any]:
         check=False,
         text=True,
     )
+    if commit.returncode != 0 or not commit.stdout.strip():
+        detail = commit.stderr.strip() or commit.stdout.strip() or "git rev-parse HEAD failed"
+        raise GitStateError(f"Unable to resolve git commit in {repo_root}: {detail}")
+
     status = subprocess.run(
         ["git", "status", "--porcelain"],
         cwd=repo_root,
@@ -55,8 +67,12 @@ def git_state(repo_root: str | Path = ".") -> dict[str, Any]:
         check=False,
         text=True,
     )
+    if status.returncode != 0:
+        detail = status.stderr.strip() or status.stdout.strip() or "git status --porcelain failed"
+        raise GitStateError(f"Unable to resolve git status in {repo_root}: {detail}")
+
     return {
-        "commit": commit.stdout.strip() or "unknown",
+        "commit": commit.stdout.strip(),
         "dirty": bool(status.stdout.strip()),
         "status_lines": [line for line in status.stdout.splitlines() if line.strip()],
     }
@@ -68,13 +84,14 @@ def build_manifest(
     input_paths: list[str | Path],
     resource_records: list[dict[str, Any]],
     package_names: list[str],
-    repo_root: str | Path = ".",
+    git: dict[str, Any],
 ) -> dict[str, Any]:
-    git = git_state(repo_root)
     return {
         "created_at_utc": utc_now_iso(),
-        "config_hash": config_hash(config),
+        "plan_hash": plan_hash(config),
+        "resolved_config_hash": resolved_config_hash(config),
         "resolved_config": config,
+        "runtime_environment": config.get("runtime", {}),
         "package_versions": package_versions(package_names),
         "seeds": get_seed_list(config),
         "input_sha256": {str(path): sha256_file(path) for path in input_paths},
@@ -84,7 +101,7 @@ def build_manifest(
 
 
 def write_run_manifest(
-    output_path: str | Path,
+    output_root: str | Path,
     *,
     config: dict[str, Any],
     input_paths: list[str | Path],
@@ -102,9 +119,9 @@ def write_run_manifest(
         input_paths=input_paths,
         resource_records=resource_records,
         package_names=package_names,
-        repo_root=repo_root,
+        git=git,
     )
-    output = Path(output_path)
+    output = Path(output_root) / f"{utc_now_path_component()}_{manifest['plan_hash'][:8]}" / "run_manifest.json"
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     return manifest

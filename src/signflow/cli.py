@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "verify-resources":
             records = verify_resources(config)
             write_run_manifest(
-                Path("runs/verify-resources/run_manifest.json"),
+                Path("runs/verify-resources"),
                 config=config,
                 input_paths=[args.config],
                 resource_records=records,
@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "smoke":
             result = run_smoke(config)
             write_run_manifest(
-                Path("runs/smoke/run_manifest.json"),
+                Path("runs/smoke"),
                 config=config,
                 input_paths=[args.config],
                 resource_records=[],

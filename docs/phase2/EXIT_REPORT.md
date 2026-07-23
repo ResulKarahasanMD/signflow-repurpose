@@ -140,4 +140,10 @@ Top-k moderated overlaps remain near independence expectation at k=50 and modest
 
 ### BENCHMARK
 
-Full DE→meta→concordance→bootstrap path implemented; clean-tree results under `runs/phase2/benchmark/` and `data/processed/phase2/meta/signature_meta_benchmark.tsv`.
+**BENCHMARK results (clean-tree DE/meta completed; manifest re-verified):**
+- GSE75214 genes_out=17814 (HGNC rejected=2165); limma BH-FDR counts={'bh_fdr_lt_0.05': 9016, 'bh_fdr_lt_0.10': 10115, 'n_genes': 17814, 'nan_moderated_effect': 0, 'nan_moderated_se': 0} (design 74 vs 11)
+- GSE87466 genes_out=17479 (HGNC rejected=3101); limma BH-FDR counts={'bh_fdr_lt_0.05': 9393, 'bh_fdr_lt_0.10': 10528, 'n_genes': 17479, 'nan_moderated_effect': 0, 'nan_moderated_se': 0}
+- `signature_meta_benchmark.tsv`: n=16837, BH-FDR<0.05=8288
+- Concordance: Spearman r=0.8040; top-50 moderated overlap=16 (E=0.15)
+- Higher shared-gene concordance (Spearman r=0.804); top-k moderated overlap=16 vs independence expectation=0.15.
+

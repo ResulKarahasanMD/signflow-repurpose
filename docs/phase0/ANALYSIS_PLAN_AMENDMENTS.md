@@ -74,3 +74,5 @@
 | P2.5.3 | Probe→gene biotype via **HGNC complete set** (cached); never silently keep when GEO lacks biotype | Both platforms lacked biotype → rejected_non_protein_coding=0 was false |
 | P2.5.4 | BENCHMARK full DE→meta→concordance→bootstrap→activity; emit `signature_meta_benchmark.tsv` | H1 confirmatory track was phenotype-only |
 | P2.5.5 | Record log2 transform fire + min/max; refuse negative clip; vectorize two-study meta; supersede prior `signature_meta.tsv` under `meta/superseded/` | Processing-record gaps |
+
+| P2.5.6 | TARGET unsupervised seed rule frozen **before** seed inspection: top-N=**50** by \|pooled moderated effect\| among genes with I² ≤ **50%** | FDR-based seeding unavailable for TARGET (GSE57560 nearly null at FDR); must not use post-hoc gene list |

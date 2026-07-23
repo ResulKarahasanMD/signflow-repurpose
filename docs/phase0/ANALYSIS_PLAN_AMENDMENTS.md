@@ -113,3 +113,17 @@
 | ID | Change | Reason |
 |---|---|---|
 | P4.0 | Phase 4 build: baselines + R-GCN/GATv2 + SSL + Mondrian CP + TARGET seed propagation; splits loaded by hash | Execute frozen Phase 4 protocol on corrected Phase 3.5 artifacts |
+
+
+## 2026-07-24 — Phase 4.5 (deviation-from-protocol repairs; not tuning)
+
+**Outcome-dependent?** No. Undertraining (15 epochs) and single-fold evaluation departed from the pre-registered plan; corrections restore it. Protocol frozen **before** re-run. No hyperparameter search. Original and corrected runs reported side by side. Prior H1 verdict voided as uninformative (rule could not have fired positive under the defective protocol).
+
+| ID | Change | Reason |
+|---|---|---|
+| P4.5.1 | Freeze GNN training: max_epochs=500, min_epochs=20, patience=50 on val AUPRC, lr=1e-3, wd=1e-4, hidden=32; SSL pretrain_steps=100, finetune matched to scratch | Restore intended training; prior run used 15 full-batch steps |
+| P4.5.2 | Evaluate all 5 stratified folds; primary metrics = pooled OOF; also report hub-stratified and LOSO | Plan specifies 5-fold CV; fold 0 only was a protocol deviation |
+| P4.5.3 | `phase4_bootstrap_n=1000` on pooled OOF; W1 uses seed-aggregated intervals | Prior n_boot=100 made W1 CI-overlap untrustworthy |
+| P4.5.4 | Sign-shuffle permutes `sign` **and** stimulation↔inhibition `relation_type` | Prior shuffle left R-GCN `edge_type` unchanged (inert control) |
+| P4.5.5 | Drop conformal `useful` boolean; report mean set size alone | Threshold was analysis-time hardcoded |
+| P4.5.6 | Report minimum detectable AUPRC difference beside H1 | Negative from underpowered rule ≠ evidence of absence |

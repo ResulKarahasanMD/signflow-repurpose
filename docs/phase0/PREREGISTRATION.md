@@ -4,16 +4,18 @@
 
 ## Git tag (repository-local timestamp)
 
-- **Tag name:** `prereg-phase0.5`
-- **Tag message:** Pre-registration of SignFlow-Repurpose analysis plan v0.2.0-phase0.5 (2026-07-23)
-- **Commit hash:** recorded below after `git commit` + `git tag` in this amendment session.
+| Field | Value |
+|---|---|
+| Tag | `prereg-phase0.5` |
+| Plan content commit | `2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab` |
+| Date (UTC) | 2026-07-23 |
+| Plan version | `0.2.0-phase0.5` |
 
-```
-TAG=prereg-phase0.5
-TAG_COMMIT=4d7d63dd39ef76fdf39fb10154465f8bd66f1e24
-PLAN_CONTENT_COMMIT=2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab
-DATE_UTC=2026-07-23
-PLAN_VERSION=0.2.0-phase0.5
+The annotated tag `prereg-phase0.5` marks the commit that finalizes this pre-registration record. Verify with:
+
+```bash
+git rev-parse prereg-phase0.5
+git show prereg-phase0.5
 ```
 
 ## External deposit (recommended before Phase 2)
@@ -21,4 +23,4 @@ PLAN_VERSION=0.2.0-phase0.5
 OSF or Zenodo deposit of `docs/phase0/ANALYSIS_PLAN.md` (+ amendments, label provenance, methods prior art) should be completed before Phase 2 downloads. Until then, the annotated git tag is the local pre-registration record.
 
 **Manuscript statement (draft):**  
-*The analysis plan (v0.2.0-phase0.5) was timestamped via git tag `prereg-phase0.5` (commit 4d7d63dd39ef76fdf39fb10154465f8bd66f1e24) on 2026-07-23, prior to Phase 2 data acquisition.*
+*The analysis plan (v0.2.0-phase0.5) was timestamped via git tag `prereg-phase0.5` on 2026-07-23, prior to Phase 2 data acquisition. Plan content frozen at commit 2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab.*

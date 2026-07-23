@@ -76,3 +76,17 @@
 | P2.5.5 | Record log2 transform fire + min/max; refuse negative clip; vectorize two-study meta; supersede prior `signature_meta.tsv` under `meta/superseded/` | Processing-record gaps |
 
 | P2.5.6 | TARGET unsupervised seed rule frozen **before** seed inspection: top-N=**50** by \|pooled moderated effect\| among genes with I² ≤ **50%** | FDR-based seeding unavailable for TARGET (GSE57560 nearly null at FDR); must not use post-hoc gene list |
+
+
+## 2026-07-23 — Phase 2.6 (methodological; not outcome-dependent)
+
+**Outcome-dependent?** No. Diagnostics characterise known RE-weighting/I² properties; sensitivity seed freezes a pre-specified concordance guard without changing the primary rule.
+
+| ID | Change | Reason |
+|---|---|---|
+| P2.6.1 | TARGET meta described as single-cohort–dominated; LOSO + weight-share diagnostics mandatory | GSE57560 n_control=3 → near-zero RE weight; pooled FDR≠replication |
+| P2.6.2 | Primary seed rule **unchanged**; sensitivity seed = same ranking + concordant direction in both cohorts (frozen before inspection) | I²→0 when one study is uninformative; primary left intact to avoid outcome-dependent swap |
+| P2.6.3 | Seed artifacts must carry per-study effect/SE/p/FDR, direction agreement, I², weight shares | Replication honesty visible at every seed presentation |
+| P2.6.4 | Abundance-regressed cross-cohort correlation diagnostic | Distinguish shared technical gradient from disease signature |
+| P2.6.5 | Benchmark concordance recorded as positive-control validation of the concordance metric | Makes TARGET near-chance top-k interpretable |
+| P3.0 | Edge sign-conflict rule frozen: **retain_as_ambiguous** | Pre-registration before inspecting conflict counts |

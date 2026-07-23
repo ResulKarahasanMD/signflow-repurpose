@@ -247,6 +247,11 @@ SSL embeddings + propagation from **signature-extreme seeds only**.
 
 ---
 
+## 11b. Limitations (Phase 2.6)
+
+- **TARGET meta-analytic signature is dominated by a single cohort; the second cohort is too imprecise to confirm or refute it.** GSE11783 alone yields 775 genes at BH-FDR<0.05; the two-study DL meta yields 640 (meta reduced rather than added evidence). Among meta-significant genes, mean random-effects weight share is ≈0.80 for GSE11783 vs ≈0.20 for GSE57560 (n_control=3). Of the 640 meta-significant genes, only 39 reach nominal p<0.05 in GSE57560; most merely share direction.
+- **I² heterogeneity guard is weak under extreme weight imbalance.** I² is low both when studies agree and when one study is too imprecise to disagree. With near-zero effective weight on GSE57560 for many genes, Q collapses and I²→0 for uninformative second-cohort genes. Primary seed rule (top-50 by |pooled moderated effect|, I²≤50%) remains unchanged (frozen pre-inspection); a sensitivity seed requiring concordant direction in both cohorts is the pre-specified guard (P2.6.2).
+
 ## 12. Commitment
 
 Follow this plan unless amended in `ANALYSIS_PLAN_AMENDMENTS.md`. RWR may win. Label filters will not be relaxed post-hoc to manufacture TARGET supervised power.

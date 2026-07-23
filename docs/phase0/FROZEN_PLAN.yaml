@@ -50,3 +50,8 @@ plan:
   target_seed_rule: top_n_by_abs_pooled_moderated_effect_i2_filter
   target_seed_n: 50
   target_seed_i2_max: 50.0
+  target_seed_sensitivity_rule: top_n_by_abs_pooled_moderated_effect_i2_filter_concordant_direction
+  target_seed_sensitivity_require_concordant_direction: true
+  target_seed_sensitivity_n: 50
+  target_seed_sensitivity_i2_max: 50.0
+  edge_sign_conflict_rule: retain_as_ambiguous

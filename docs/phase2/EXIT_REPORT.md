@@ -147,3 +147,52 @@ Top-k moderated overlaps remain near independence expectation at k=50 and modest
 - Concordance: Spearman r=0.8040; top-50 moderated overlap=16 (E=0.15)
 - Higher shared-gene concordance (Spearman r=0.804); top-k moderated overlap=16 vs independence expectation=0.15.
 
+
+
+---
+
+## Phase 2.6 Addendum — TARGET replication honesty (2026-07-23)
+
+**Status:** Diagnostics emitted under `data/processed/phase2/meta/diagnostics_phase26/`. Primary seed rule **unchanged**. Sensitivity seed rule frozen in `FROZEN_PLAN.yaml` before gene inspection.
+
+### A1 — Single-cohort dominance (not cross-cohort replication)
+
+| Diagnostic | Value |
+|---|---|
+| Meta BH-FDR<0.05 | **640** |
+| Of those, also FDR<0.05 in GSE11783 alone | **242** |
+| Of those, nominal p<0.05 in GSE57560 | **39** |
+| Of those, same direction in GSE57560 | **635** |
+| GSE11783-alone BH-FDR<0.05 | **775** |
+| GSE57560-alone BH-FDR<0.05 / <0.10 | **0 / 1** |
+| Genome-wide mean RE weight share GSE11783 / GSE57560 | **0.599 / 0.401** |
+| Among meta-sig genes mean RE weight share GSE11783 / GSE57560 | **0.804 / 0.196** |
+| Median among meta-sig GSE11783 / GSE57560 | **0.827 / 0.173** |
+
+**Plain statement:** The TARGET meta-analytic signature is dominated by a single cohort; the second cohort is too imprecise to confirm or refute it. Meta-analysis reduced rather than added evidence relative to GSE11783 alone (775 → 640).
+
+### A2 — Seed rules
+
+- **Primary (unchanged):** top-50 by \|pooled moderated effect\|, I² ≤ 50%.
+- **Sensitivity (frozen pre-inspection):** same ranking + concordant direction in both cohorts.
+- Mandatory annotation columns on seed TSVs: per-study effect/SE/p/BH-FDR, direction_agree, I², per-study weight shares.
+- Primary ∩ sensitivity overlap: **50 / 50** (all primary seeds also pass direction concordance under the I² filter).
+- Methodological note: I²→0 when one study is uninformative does not prove cross-cohort agreement; primary rule deliberately left unchanged (amendment P2.6.2; not outcome-dependent).
+
+### A3 — Abundance residualization
+
+Cross-cohort Spearman of moderated effects: **0.3557 before** vs **0.3533 after** AveExpr residualization (delta≈0.002). Residual correlation remains material — a shared low-amplitude component is **not** fully explained by mean-expression association alone in this pair. Probe-level covariates beyond AveExpr were not available in the author-normalized matrices.
+
+### A4 — Benchmark as concordance instrument validation (positive control)
+
+BENCHMARK shared-gene Spearman **0.804**; top-50 moderated overlap **16** vs independence expectation **≈0.15**. This is **positive-control validation of the concordance metric**: the machinery detects replication when replication exists, which makes the TARGET near-chance top-k overlap interpretable as a scientific result rather than a residual bug.
+
+### Artifacts
+
+- `meta/diagnostics_phase26/target_meta_diagnostics.json`
+- `meta/diagnostics_phase26/target_re_weight_shares.tsv`
+- `meta/diagnostics_phase26/target_seeds_primary.tsv`
+- `meta/diagnostics_phase26/target_seeds_sensitivity_concordant.tsv`
+- `meta/diagnostics_phase26/phase26_summary.json`
+
+**Phase 3 gate:** §A diagnostics committed; proceed to Phase 3 build. Do not begin Phase 4 until Phase 3 tests are green and the Phase 3 exit report is committed.

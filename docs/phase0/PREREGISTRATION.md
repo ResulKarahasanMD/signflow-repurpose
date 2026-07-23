@@ -19,11 +19,12 @@ git show prereg-phase0.5
 
 | Field | Value |
 |---|---|
-| **Public GitHub Gist** | https://gist.github.com/ResulKarahasanMD/f3d6af1db8b405f24b0026e1e13315ce |
-| **Bundle SHA256** (Phase 0.5 core docs at receipt time) | `68d4eeaedffe2ea76806a08ac6118e709ad07992817371045ce2df7adbc97b63` |
+| **Public GitHub Gist (Phase 0.5)** | https://gist.github.com/ResulKarahasanMD/f3d6af1db8b405f24b0026e1e13315ce |
+| **Public GitHub Gist (Phase 0.6)** | https://gist.github.com/ResulKarahasanMD/958b8c80430732caff2bada19b5b2c6d |
+| **Bundle SHA256** (Phase 0.5 core docs at first receipt) | `68d4eeaedffe2ea76806a08ac6118e709ad07992817371045ce2df7adbc97b63` |
+| **Bundle SHA256** (all `docs/phase0/*.md` at Phase 0.6 commit) | `99789eb553084d57489d7bf87b437db80b83eb1843e764d342166723b83756a6` |
+| **Phase 0.6 commit** | `d2e4bef71b7f924db761bbfb9c10603df82b17a2` |
 | **Date (UTC)** | 2026-07-23 |
 
-A follow-up gist will record the Phase 0.6 plan hash after this amendment commit.
-
 **Manuscript statement (draft):**  
-*The analysis plan was pre-registered prior to Phase 2 data acquisition via a public GitHub Gist receipt (https://gist.github.com/ResulKarahasanMD/f3d6af1db8b405f24b0026e1e13315ce) recording SHA-256 `68d4eeaedffe2ea76806a08ac6118e709ad07992817371045ce2df7adbc97b63`, with local git tag `prereg-phase0.5` and plan-content commit `2b1a39af…`. Phase 0.6 amendments were logged before Phase 1/2 execution.*
+*The analysis plan was pre-registered prior to Phase 2 data acquisition via public GitHub Gist receipts (Phase 0.5: https://gist.github.com/ResulKarahasanMD/f3d6af1db8b405f24b0026e1e13315ce ; Phase 0.6: https://gist.github.com/ResulKarahasanMD/958b8c80430732caff2bada19b5b2c6d), with local git tag `prereg-phase0.5` and plan-content commit `2b1a39af…`. Phase 0.6 locks (label adjudication, UC cohorts, futility J) were recorded before Phase 1/2 execution.*

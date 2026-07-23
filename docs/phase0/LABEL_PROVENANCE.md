@@ -138,18 +138,20 @@ Unfiltered overall OT score for comparison (not used): IC thr≥0.3 → *n*=3; U
 
 ---
 
-## 6. Track decision under label scarcity (A2.4)
+## 6. Track decision under label scarcity (A2.4) — superseded by A6.1
 
-- **BENCHMARK (UC):** *n*=396 genetics positives at thr≥0.30 → **supervised prioritization remains primary** for H1.  
-- **TARGET (IC/BPS):** *n*=38 animal-model positives at thr≥0.30 with **no human genetics channel**. This is too scarce for a credible supervised primary claim under Mondrian CP / few-shot evaluation.
-
-**Decision (frozen):** For the TARGET track, the **primary analysis is the unsupervised / label-free comparator** (signature-seeded propagation + SSL embeddings). Supervised few-shot fine-tuning on the 38 animal-model labels is **secondary / exploratory only**. We do **not** relax filters to manufacture more labels.
+- **BENCHMARK (UC):** *n*=396 genetics positives at thr≥0.30 → supervised prioritization remains primary for H1.  
+- **TARGET (IC/BPS):** After [`LABEL_ADJUDICATION.md`](LABEL_ADJUDICATION.md), `plausible-ICBPS` = 6 < **N=15** → **`animal_model` DROPPED**.  
+  **Frozen finding:** *IC/BPS has no usable curated disease-gene label set under non-drug, non-literature evidence.*  
+  TARGET supervised path **cancelled**. Unsupervised comparator is the only TARGET gene-prioritization path.
 
 ---
 
 ## 7. Forbidden label sources (analysis plan §2.3)
 
 1. DE genes / signature genes as ground-truth disease labels.  
-2. Open Targets `clinical` / `clinical_precedence` / ChEMBL-derived known-drug evidence when drug rediscovery is an evaluation endpoint.  
-3. Open Targets `literature` / `europepmc` / `genetic_literature` in the **primary** label definition.  
-4. Open Targets `rna_expression` / `expression_atlas` as labels when cohort expression is used as features or signature.
+2. Open Targets `clinical` / `clinical_precedence` / known-drug evidence when drug rediscovery is an endpoint.  
+3. Open Targets `literature` / `europepmc` / `genetic_literature` in the primary label definition.  
+4. Open Targets `rna_expression` / `expression_atlas` as labels when expression is a feature/signature.  
+5. Non-`protein_coding` biotypes (e.g. **UOX**) as labels or graph nodes.  
+6. Adjudicated IMPC/`animal_model` genes as unsupervised TARGET seeds.

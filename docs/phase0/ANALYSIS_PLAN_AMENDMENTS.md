@@ -10,22 +10,27 @@
 
 | ID | Change | Reason |
 |---|---|---|
-| A1 | Added `METHODS_PRIOR_ART.md`; rewrote novelty in `GAP_STATEMENT.md` | Methods claims overlapped TxGNN, CARNIVAL, CP literature; disease-only lit review was insufficient |
-| A2 | Added `LABEL_PROVENANCE.md`; froze OT datatype allowlists + thr≥0.30; TARGET supervised demoted | Drug/literature circularity in unfiltered OT scores; IC filtered to n=38 animal_model only |
-| A3 | Mondrian CP; exchangeability unit = genes/drugs; coverage + mean set size; patient bootstrap separate | Prior plan omitted unit; patient generalization must not be implied |
-| A4 | Primary path = per-study DE + random-effects meta-analysis; ComBat demoted to sensitivity | Study×condition confounding; 2 studies make fold-wise ComBat non-meaningful |
-| B1 | Triangulation: replace DepMap primary axis with GTEx/HPA tissue expression + scRNA cell-type | DepMap is cancer dependency; invalid for IC/BPS and non-cancer UC indication scoring |
-| B2 | L1000 framed as replication vs PMID 39723619 | Not novel for IC/BPS; cell-context mismatch stated |
-| B3 | GSE238208 → inflammation-specificity control; GSE310557 → cell-type attribution | Pre-specify roles reviewer will demand |
-| B4 | DoRothEA/collectTRI + PROGENy via decoupleR are core features/scoring inputs | W4 mRNA≠activity was prior project failure |
-| B5 | Signature bootstrap + permuted-signature null are first-class | Small n instability otherwise invisible |
-| B6 | Unsupervised comparator shares signature dependence — not orthogonal validation | Prevent overclaim |
-| C1 | Disease module = conformal α=0.1 set; sensitivity {50,100,250} | Was illegally deferred |
-| C2 | H6: fixed k in {20,50}, primary k=20; bootstrap enrichment test | No test/k before |
-| C3 | Hypothesis hierarchy: H1 primary (benchmark); H7 descriptive (target); rest secondary | Avoid fake multi-primary |
-| C4 | Label thr pinned (see A2) | — |
-| C5 | Power / descriptive TARGET paragraph added | Honest n |
-| C6 | Pre-registration via git tag `prereg-phase0.5` + commit hash file | External timestamp before Phase 2 download |
-| C7 | Ethics one-liner added | Public de-identified data |
+| A1 | Added `METHODS_PRIOR_ART.md`; rewrote novelty in `GAP_STATEMENT.md` | Methods claims overlapped TxGNN, CARNIVAL, CP literature |
+| A2 | Added `LABEL_PROVENANCE.md`; froze OT allowlists + thr≥0.30; TARGET supervised demoted | Drug/literature circularity; IC *n*=38 animal_model only |
+| A3 | Mondrian CP; exchangeability = genes/drugs; coverage + mean set size | Unit omitted; patient generalization must not be implied |
+| A4 | Per-study DE + random-effects meta-analysis; ComBat sensitivity-only | Study×condition confounding |
+| B1–B6 / C1–C7 | Triangulation, L1000 replication, planned cohorts, activity core, stability, hierarchy, ethics | See Phase 0.5 text |
 
-**Claims weakened (intentional):** C1, C2 (foundation novelty), C4 (priority vs CARNIVAL), C5 (technique novelty) demoted to method/rigor components. DepMap demoted. TARGET supervised track demoted to exploratory.
+**Claims weakened:** C1/C2/C4/C5 demoted; DepMap demoted; TARGET supervised demoted to exploratory.
+
+---
+
+## 2026-07-23 — Phase 0.6 closure (pre-results)
+
+**Outcome-dependent?** No.
+
+| ID | Change | Reason |
+|---|---|---|
+| A6.1 | `LABEL_ADJUDICATION.md`; N=15; plausible=6 → **drop animal_model**; UOX out of nodes; seed ban | IMPC labels urinary-tract/renal/stone biased |
+| A6.2 | BENCHMARK genetics **excluded from convergence** (Option 1) | Same channel family as training labels |
+| A6.3 | External gist receipt; PREREGISTRATION dual-hash clarification | Local tag alone not externally verifiable |
+| A6.4 | UC cohorts locked: **GSE75214 + GSE87466** | H1 must not retain cohort degrees of freedom |
+| A6.5 | PROGENy/DoRothEA domain-mismatch + activity dispersion QC | Symmetric with DepMap demotion |
+| A6.6 | GSE11783 primary = **non-ulcer**; H7 futility **J=0.20**; GSE310557 re-verified | Comparability; descriptive ≠ unbounded |
+
+**Further weakened:** TARGET supervised path **cancelled**. Publishable finding: no usable curated IC/BPS labels under non-drug/non-literature evidence.

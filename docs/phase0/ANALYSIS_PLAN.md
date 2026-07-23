@@ -1,10 +1,10 @@
 # Pre-registered analysis plan — SignFlow-Repurpose
 
-**Version:** 0.2.0-phase0.5  
+**Version:** 0.3.0-phase0.6  
 **Date locked:** 2026-07-23  
-**Supersedes:** 0.1.0-phase0  
+**Supersedes:** 0.2.0-phase0.5  
 **Amendments:** [`ANALYSIS_PLAN_AMENDMENTS.md`](ANALYSIS_PLAN_AMENDMENTS.md)  
-**Label rules:** [`LABEL_PROVENANCE.md`](LABEL_PROVENANCE.md)  
+**Label rules:** [`LABEL_PROVENANCE.md`](LABEL_PROVENANCE.md) · [`LABEL_ADJUDICATION.md`](LABEL_ADJUDICATION.md)  
 **Methods prior art:** [`METHODS_PRIOR_ART.md`](METHODS_PRIOR_ART.md)
 
 **Amendment rule:** Changes after Phase 2 data freeze must be logged with date, reason, and outcome-dependence (discouraged).
@@ -28,6 +28,10 @@ This plan is pre-specified before Phase 2 data download and model fitting.
 | `NULL_PERMUTATIONS` | `≥1000` | Degree-matched drug nulls |
 | `SIGNATURE_BOOTSTRAPS` | `≥1000` when feasible | Else max leave-one-out style with documented *B* |
 | `TRIANGULATION_K_PRIMARY` | `20` | Also report `k=50` |
+| `LABEL_ADJUDICATION_N` | `15` | Min `plausible-ICBPS`; see LABEL_ADJUDICATION |
+| `H7_FUTILITY_J` | `0.20` | Signature-bootstrap top-20 Jaccard futility |
+| `BENCHMARK_COHORTS` | `GSE75214`, `GSE87466` | Locked by §A6.4 rule (below) |
+| `GSE11783_PRIMARY_SITE` | `non-ulcer` | Ulcer = sensitivity (A6.6) |
 | `PYTHON` | `3.12` via `uv` | — |
 
 Device: `cuda → mps → cpu`; `PYTORCH_ENABLE_MPS_FALLBACK=1`; pure-Python PyG convs.
@@ -50,7 +54,7 @@ Secondary results are reported as exploratory.
 On UC, with **filtered genetics labels** (§2.3), a relational/signed GNN (± SSL pretrain) **improves** gene prioritization vs RWR on the pre-specified primary split (AUPRC primary, AUROC co-reported), **or** we report that it does not.
 
 ### H2 — secondary (transfer)
-SSL pretrain + few-shot fine-tune improves vs from-scratch under matched budgets (BENCHMARK; TARGET exploratory only).
+SSL pretrain + few-shot fine-tune improves vs from-scratch under matched budgets (**BENCHMARK only**; TARGET supervised path cancelled after A6.1).
 
 ### H3 — secondary (confounding)
 After degree-matched nulls and degree covariates, top drug ranks are not sole degree artifacts; report Spearman ρ(score, degree) and partial correlations.
@@ -65,7 +69,8 @@ Mondrian conformal gene/drug sets achieve empirical coverage ≥ 1−α **and** 
 At **k=20** (also k=50), convergence rank recovers more UC gold-standard drugs than any single axis, tested by **bootstrap resampling over the gold-standard drug set** (*B*≥1000): one-sided *p* that enrichment@k(convergence) > max_axis enrichment@k. Decision: reject null at α=0.05 for secondary claim; if not, report no advantage.
 
 ### H7 — DESCRIPTIVE (TARGET)
-IC/BPS yields a hypothesis-generating conformal (or unsupervised-module) drug set with transparent axis disagreements; soft positives reported where they land — not forced.
+IC/BPS yields a hypothesis-generating unsupervised module + drug set with transparent axis disagreements; soft positives reported where they land — not forced.  
+**Futility (A6.6):** if signature-bootstrap top-20 drug Jaccard < **J = 0.20**, report TARGET as **non-informative** (stability stats + disagreements only; **no ranked candidate list as a finding**).
 
 ---
 
@@ -76,15 +81,17 @@ IC/BPS yields a hypothesis-generating conformal (or unsupervised-module) drug se
 | Accession | Role |
 |---|---|
 | GSE11783, GSE57560 | **Primary** TARGET bulk DE (independent per study) + meta-analysis |
-| GSE238208 | **Inflammation-specificity control:** does the prioritized module/signature separate Hunner-type IC from BCG cystitis? **Forbidden** as IC-vs-healthy DE |
-| GSE310557 | **Cell-type attribution** for module genes / target expression axis; **not** merged into bulk DE |
+| GSE238208 | **Inflammation-specificity control** (HIC vs BCG); **forbidden** as IC-vs-healthy DE |
+| GSE310557 | **Cell-type attribution** (re-verified: *n*=17 = 10 HIC + 7 PSUI; GPL34284; PMID 41457077); not merged into bulk DE |
 | GSE28242 | Optional urine orthogonal signature only |
-| UC ≥2 mucosal cohorts | Locked in Phase 2 after phenotype QC (candidates verified exist: GSE75214, G87466, GSE59071, GSE107499, GSE128682) |
+| **GSE75214, GSE87466** | **BENCHMARK UC cohorts (locked by A6.4 rule)** |
+
+**UC lock rule (A6.4, frozen):** Among `{GSE75214, GSE87466, GSE59071, GSE107499, GSE128682}`, keep series with series-matrix HEAD `Content-Length > 100000` and ≥1 control/healthy/normal sample; pick the two with largest control counts; ties → ascending GSE. **Expected selection (2026-07-23):** GSE75214 (22 controls) + GSE87466 (21). GSE107499 has 0 controls; GSE128682 matrix ~4 KB stub → ineligible.
 
 ### 2.2 Disease signature — primary path (A4)
 
 1. **DE within each study independently** (limma / limma-voom for microarray; PyDESeq2 only for raw counts).  
-2. GSE11783: **one sample per patient** (primary = ulcer site; sensitivity = non-ulcer; patient-mean).  
+2. GSE11783: **one sample per patient**. **Primary site = non-ulcer (“ni”)** for cross-cohort comparability with non-Hunner-selected GSE57560; **ulcer site = sensitivity**; patient-mean = additional sensitivity. Rationale (A6.6): ulcer-vs-normal maximises granulation/immune-infiltrate divergence from GSE57560 and would bias the meta-analysis toward lesion necrosis rather than shared IC/BPS biology; non-ulcer primary reduces that divergence. This choice **increases** the importance of GSE238208 inflammation-specificity control.  
 3. Combine studies by **random-effects meta-analysis of standardised effect sizes**; report pooled effect, SE, *p*, BH-FDR, **I²** and Cochran’s **Q**.  
 4. **Concordance analysis** between studies: effect-size correlation, directional agreement, top-*k* overlap. Low concordance is a publishable finding — do not average it away.  
 5. **Sensitivity:** rank-based per-study standardisation; pooled ComBat **only** as clearly labelled sensitivity (never primary).  
@@ -94,15 +101,16 @@ Signature = **feature / scoring target**, never labels.
 
 ### 2.3 Labels (A2) — see LABEL_PROVENANCE.md
 
-- **BENCHMARK primary labels:** Open Targets `genetic_association` datatype score ≥ **0.30** (`label_score = max` allowlisted datatype scores). *n*=396 (2026-07-23).  
-- **TARGET:** filtered `animal_model` ≥0.30 yields *n*=38 and **no genetics channel** → **supervised TARGET is secondary/exploratory**; **primary TARGET analysis = unsupervised comparator**.  
-- Sensitivities: thr ∈ {0.20, 0.40}; UC ± `somatic_mutation`.  
-- **Forbidden:** DE-as-labels; `clinical`/`clinical_precedence`/known-drug evidence when drug rediscovery is an endpoint; primary use of `literature`/`europepmc`/`genetic_literature`; `rna_expression`/`expression_atlas` as labels when expression is a feature/signature.
+- **BENCHMARK primary labels:** Open Targets `genetic_association` datatype score ≥ **0.30**. *n*=396 (2026-07-23). Sensitivities: thr ∈ {0.20, 0.40}; ± `somatic_mutation`.  
+- **TARGET labels:** After IMPC adjudication ([`LABEL_ADJUDICATION.md`](LABEL_ADJUDICATION.md)), `plausible-ICBPS` = 6 < **N=15** → **`animal_model` channel DROPPED**. Finding: *IC/BPS has no usable curated disease-gene label set under non-drug, non-literature evidence.* TARGET supervised path **cancelled**.  
+- **Forbidden:** DE-as-labels; drug/clinical evidence labels when rediscovery is an endpoint; literature labels in primary definition; expression_atlas labels when expression is a feature; non-`protein_coding` genes (e.g. **UOX**) as labels or nodes; adjudicated animal_model genes as unsupervised seeds.
 
 ### 2.4 Networks and **core** activity inference (B4)
 
 - OmniPath (`is_directed`, `is_stimulation`, `is_inhibition`) + SIGNOR; STRING v12 auxiliary.  
 - **Core (not optional):** TF activity via **DoRothEA / CollecTRI** and pathway activity via **PROGENy**, both through **decoupleR** (versions recorded in run manifest). Cite CARNIVAL/DoRothEA/PROGENy as established footprint approaches; our flow score differs by continuous signed propagation + degree-matched nulls + conformal wrapping (not ILP causal network inference).  
+- **Domain-mismatch limitation (A6.5, symmetric with DepMap):** PROGENy footprints and DoRothEA/CollecTRI regulons are substantially informed by cancer/cell-line perturbation biology. They remain the best open activity-inference tools and are retained, but are **out-of-domain relative to benign inflammatory bladder/colon disease** — stated in Limitations.  
+- **Precision limitation:** TF/pathway activity from *n*≈16 microarray cohorts is low-precision; report **per-sample activity score dispersion** as QC.  
 - If a resource is unavailable/unlicensed → **stop that component and report**; do not silently fall back to raw mRNA-only direction scoring.
 
 ### 2.5 Drugs and triangulation inputs
@@ -112,8 +120,7 @@ Signature = **feature / scoring target**, never labels.
 - L1000 / Connectivity Map: **orthogonal replication** of PMID 39723619; compare hit agreement/disagreement; state cancer-line context mismatch (B2).  
 - Tissue appropriateness: **GTEx and/or Human Protein Atlas** bladder (TARGET) / colon (BENCHMARK) expression specificity (B1).  
 - Cell-type support: GSE310557.  
-- DepMap: **exploratory toxicity-proxy only**, labelled out-of-domain for non-cancer indications — not a triangulation axis.  
-- Genetics triangulation axis: filtered OT genetics evidence on **drug targets** (independent of gene-label allowlist used for training where applicable).
+- DepMap: **exploratory toxicity-proxy only**, labelled out-of-domain for non-cancer indications — not a triangulation axis.
 
 ### 2.6 Provenance and ethics
 
@@ -140,10 +147,10 @@ Mapping QC tables mandatory.
 Random / degree / PageRank; logistic regression; HistGradientBoosting; feature-only MLP; label propagation; **RWR**; controls: degree-preserving rewire, edge shuffle, **sign shuffle**, features-only.
 
 ### 4.2 Proposed model
-Relational/signed MP (R-GCN-style and/or GATv2 with edge-type/sign); SSL pretrain (DGI and/or contrastive and/or masked attr + edge-sign pred); few-shot fine-tune; PU framing.
+Relational/signed MP (R-GCN-style and/or GATv2 with edge-type/sign); SSL pretrain (DGI and/or contrastive and/or masked attr + edge-sign pred); few-shot fine-tune on **BENCHMARK** labels only; PU framing. TARGET has no curated labels after A6.1.
 
 ### 4.3 Splits
-Stratified CV; degree-aware split; BENCHMARK leave-one-study-out inductive. TARGET supervised exploratory only if labels used.
+Stratified CV; degree-aware split; BENCHMARK leave-one-study-out inductive.
 
 ### 4.4 Metrics
 AUROC, AUPRC, MCC, balanced accuracy, ECE, precision@k, recall@k, enrichment@k; bootstrap CIs; multi-seed mean ± sd.  
@@ -187,21 +194,23 @@ Differentiate from CARNIVAL: continuous flow score + nulls + conformal sets + tr
 
 | Axis | Role | Definition |
 |---|---|---|
-| Network-flow | Primary scoring | Sign-consistent drug score (C4) |
-| L1000 | **Replication** of PMID 39723619 | Signature reversal; agreement table vs prior compounds; cell-context limitation stated |
-| Tissue/cell appropriateness | Replaces DepMap | GTEx/HPA expression in bladder or colon; GSE310557 cell-type support |
-| Genetics | Orthogonal | Filtered OT genetics support for drug targets |
+| Network-flow | In convergence | Sign-consistent drug score (C4) |
+| L1000 | In convergence; **replication** of PMID 39723619 | Signature reversal; agreement/disagreement table; cell-context limitation |
+| Tissue/cell appropriateness | In convergence | GTEx/HPA bladder or colon expression; GSE310557 cell-type support |
+| Genetics (BENCHMARK) | **Descriptive only — EXCLUDED from convergence (A6.2 Option 1)** | Filtered OT genetics on drug targets; same channel family as training labels → would make H6 partly self-fulfilling. Methods note: genetic support predicts drug-development success by construction, not by error. TARGET unaffected (no genetics channel). |
 | DepMap | Exploratory only | Cancer dependency; out-of-domain disclaimer |
 
-**Convergence rank:** reciprocal rank fusion over axes with non-missing scores. Disagreements listed. Missing axis → no imputation.
+**Convergence rank (BENCHMARK):** reciprocal rank fusion over {network-flow, L1000, tissue/cell} only. Genetics reported separately, never folded into H6. Disagreements listed. Missing axis → no imputation.
 
 ---
 
-## 8. Unsupervised comparator (B6; TARGET primary)
+## 8. Unsupervised comparator (B6; TARGET primary — only TARGET path)
 
-SSL embeddings + propagation from **signature-extreme seeds** (seeds ≠ curated labels).  
+SSL embeddings + propagation from **signature-extreme seeds only**.  
 
-**Shared-dependence non-claim:** This comparator and the drug score both use the disease signature; agreement with the supervised track is **not** orthogonal validation.
+**Hard constraint (A6.1):** Open Targets / IMPC / adjudicated animal_model genes — including the former 38-gene list — **must never be used as seeds** for this path.  
+
+**Shared-dependence non-claim:** This comparator and the drug score both use the disease signature; agreement with any supervised BENCHMARK analysis is **not** orthogonal validation of TARGET.
 
 ---
 

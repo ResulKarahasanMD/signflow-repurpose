@@ -98,7 +98,7 @@ Note: ulcer and non-ulcer samples from the **same patients** are **not** indepen
 | Accession | Planned role (pre-specified) | Restrictions |
 |---|---|---|
 | **GSE238208** | **Inflammation-specificity control:** does the prioritized module/signature separate Hunner-type IC from BCG cystitis (generic bladder inflammation)? *n*=63. PMID [38026177](https://pubmed.ncbi.nlm.nih.gov/38026177/). | **Forbidden** as IC-vs-healthy DE |
-| **GSE310557** | **Cell-type attribution** for module genes and tissue/cell appropriateness axis (10 HIC + 7 PSUI controls, scRNA-seq). PMID [41457077](https://pubmed.ncbi.nlm.nih.gov/41457077/). | **Not** merged into bulk DE / meta-analysis |
+| **GSE310557** | **Cell-type attribution.** **Re-verified 2026-07-23:** *n*=17 (10 HIC + 7 PSUI); GPL34284; scRNA-seq; PMID [41457077](https://pubmed.ncbi.nlm.nih.gov/41457077/) DOI `10.1038/s41467-025-68060-1`. | **Not** merged into bulk DE |
 | **GSE28242** | Optional urine orthogonal signature only. PMID [22177197](https://pubmed.ncbi.nlm.nih.gov/22177197/). | Different biospecimen |
 | **GSE11839** | Not planned for primary analyses | Cultured cells |
 | **GSE621** | Not planned for primary analyses | Historical explants |

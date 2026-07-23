@@ -98,3 +98,57 @@ Control seed = 0 (frozen).
 ## §A precondition (Phase 2.6)
 
 Completed and committed (`08b77a0`): TARGET meta dominated by GSE11783; sensitivity seed frozen; abundance residual Spearman 0.356→0.353; BENCHMARK concordance recorded as positive-control validation of the metric.
+
+
+---
+
+## Phase 3.5 Addendum (2026-07-23) — corrections before Phase 4
+
+**Status:** Activity features redefined; post-merge unique-pair conflict rule applied; control graphs regenerated; Phase 5 proximity substrate frozen blind to drug data.  
+**Commits:** this addendum; run artifacts under `/Users/rak/bio-research/data/processed/phase3/20260723T203525Z`.  
+**Outcome-dependence:** A2 = defect fix (not a rule change). A4 frozen pre-inspection. A1 methodological.
+
+### Numbers that changed vs prior Phase 3 exit report
+
+| Quantity | Prior (incorrect/incomplete) | Corrected |
+|---|---|---|
+| Causal edge records | 101 372 (multi-record pairs allowed) | **89306 unique ordered pairs** |
+| Multi-record pairs collapsed | (unreported; implicit duplicate weighting) | **12352 multi-record → 17769 records removed** |
+| Cross-source ±1 conflicts → ambiguous | 0 (rule not applied post-merge) | **162** |
+| TARGET track causal edges | 45 917 records (uncollapsed) | **34322 unique pairs** |
+| TARGET sign balance (+ / 0 / −) | exit report printed 0/0/0 (bug) | **15498 / 11860 / 6964** |
+| Full causal sign balance (+ / 0 / −) | misprinted 0/0/0 | **66617 / 14420 / 8269** |
+| `progeny_activity` / `collectri_activity` | dead zero-filled columns (1 and 647 nonzero; missingness reported 0.0) | **Dropped**; replaced by `progeny_score`+`progeny_covered`, `collectri_tf_activity`+`is_tf`+`regulon_target_activity`+coverage indicators |
+
+### A1 — Activity feature density (BENCHMARK n=7756)
+
+See `feature_density_qc.tsv`. Headline nonzero fractions among nodes:
+- `progeny_score`: covered **721** nodes (9.3%); structural absent flagged via `progeny_covered`
+- `collectri_tf_activity`: **647** nonzero among TFs; `is_tf`=854 (11.0%)
+- `regulon_target_activity`: **4499** nonzero (58.0%) — non-TF nodes now carry activity-derived signal
+- Near-constant gate (`feature_min_variance=1e-8`): **passed**
+
+Formulations: PROGENy = Σ_p (gene_weight_p × pathway_activity_p); CollecTRI = TF activity for TF nodes + regulon-weighted target activity. Structural absence never silently equals observed zero without an indicator.
+
+### A2 — Post-merge conflict rule (defect fix)
+
+Frozen rule `retain_as_ambiguous` now applied on ordered `(source, target)` **after** OmniPath∪SIGNOR merge. Each pair appears exactly once. The prior 11 884+ multi-record pairs constituted **undocumented edge multiplicity weighting** with no ablation — removed by collapse. Controls regenerated from the unique-pair graph (TARGET rewire degree-exact; sign-shuffle multiset preserved; n_edges=34322).
+
+### A3 — Node-universe provenance
+
+measurable genes (16983) → causal-network symbols (9285, of which 8116 matched + 37 alias) → node universe (7773); binding constraint is the curated network, not expression.
+
+Binding constraint: **curated causal network**, not expression breadth.
+
+### A4 — Phase 5 proximity substrate (frozen blind)
+
+| Key | Value |
+|---|---|
+| Primary | `signed_causal_only` |
+| Sensitivity | `causal_plus_string_unsigned` |
+| Min drug targets in substrate | 1 |
+| Poor coverage policy | `report_structural_limitation_do_not_switch_substrate` |
+
+### Phase 4 gate
+
+§A corrections committed. Proceed to Phase 4. Do not begin Phase 5 until Phase 4 tests are green, the Phase 4 exit report is committed, and the H1 verdict (including if negative) is recorded.

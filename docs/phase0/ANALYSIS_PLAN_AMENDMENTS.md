@@ -93,3 +93,14 @@
 
 | P3.1 | STRING auxiliary score floor frozen at **400** (physical links layer separate) | Pre-inspection; auxiliary undirected layer only |
 | P3.2 | Phase 3 CV folds=5; control-graph seed=0; degree-match tolerance=0.15 | Pre-inspection split/control hyperparameters |
+
+
+## 2026-07-23 — Phase 3.5 corrections
+
+**Outcome-dependent?** No for A2 (defect fix applying frozen conflict rule to the merged edge set where it was always meant to apply). No for A4 (substrate frozen blind to drug coverage). A1 is methodological (structural absence must not be zero-filled).
+
+| ID | Change | Reason |
+|---|---|---|
+| P3.5.1 | Apply `retain_as_ambiguous` after OmniPath∪SIGNOR merge on ordered (source,target); assert unique pairs | Defect fix — rule was applied only to OmniPath-internal conflicts |
+| P3.5.2 | Redefine CollecTRI/PROGENy gene features with coverage indicators; density QC; variance gate (`feature_min_variance`) | Dead zero-filled columns falsely implied W4 activity fix |
+| P3.5.3 | Freeze Phase 5 proximity substrate: primary=`signed_causal_only`, sensitivity=`causal_plus_string_unsigned`; min targets=1; poor coverage → report limitation, do not switch | Blind to drug data (A4) |

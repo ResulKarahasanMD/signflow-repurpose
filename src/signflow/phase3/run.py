@@ -16,7 +16,7 @@ from signflow.phase2 import PHASE2_META_ROOT, PHASE2_OUTPUT_ROOT
 from . import FROZEN_PLAN, PHASE3_OUT, StopAndReportError, ensure_directory
 from .acquire import acquire_networks
 from .controls import emit_control_graphs
-from .edges import build_causal_edge_table, build_string_edge_table
+from .edges import build_causal_edge_table, build_string_edge_table, collapse_to_unique_pairs, load_conflict_rule
 from .features import FEATURE_COLUMNS, build_feature_table
 from .id_map import build_mapper
 from .labels import write_benchmark_labels
@@ -25,19 +25,42 @@ from .splits import emit_splits
 
 
 def _network_summary(nodes: list[str], edges: pd.DataFrame) -> dict[str, object]:
+    """Summary over the unique-pair causal edge table restricted to `nodes`.
+
+    After Phase 3.5 A2, each ordered pair appears once, so n_edges equals
+    sum(relation_type_distribution) and equals DiGraph edge count.
+    """
+
+    sub = edges[edges["source"].isin(nodes) & edges["target"].isin(nodes)].copy()
+    if sub.duplicated(subset=["source", "target"]).any():
+        raise StopAndReportError(
+            "Duplicate ordered pairs in track causal edges",
+            reason="duplicate-causal-pairs",
+        )
+    rel = sub["relation_type"].value_counts().to_dict() if len(sub) else {}
+    n_edges = int(len(sub))
+    if int(sum(rel.values())) != n_edges:
+        raise StopAndReportError(
+            f"n_edges ({n_edges}) != relation_type sum ({sum(rel.values())})",
+            reason="edge-summary-inconsistency",
+        )
     g = nx.DiGraph()
     g.add_nodes_from(nodes)
-    for _, row in edges.iterrows():
-        if row["source"] in g and row["target"] in g:
-            g.add_edge(row["source"], row["target"])
+    for _, row in sub.iterrows():
+        g.add_edge(row["source"], row["target"])
+    assert g.number_of_edges() == n_edges
     undirected = g.to_undirected()
     components = list(nx.connected_components(undirected))
     degrees = pd.Series({n: g.degree(n) for n in g.nodes()})
+    sign_bal = {int(k): int(v) for k, v in sub["sign"].value_counts().to_dict().items()} if len(sub) else {}
     return {
-        "n_nodes": g.number_of_nodes(),
-        "n_edges": g.number_of_edges(),
-        "sign_balance": edges["sign"].value_counts().to_dict() if len(edges) else {},
-        "relation_type_distribution": edges["relation_type"].value_counts().to_dict() if len(edges) else {},
+        "n_nodes": int(len(nodes)),
+        "n_edges": n_edges,
+        "sign_balance": sign_bal,
+        "sign_balance_plus": int(sign_bal.get(1, 0)),
+        "sign_balance_zero": int(sign_bal.get(0, 0)),
+        "sign_balance_minus": int(sign_bal.get(-1, 0)),
+        "relation_type_distribution": rel,
         "degree_mean": float(degrees.mean()) if len(degrees) else 0.0,
         "degree_median": float(degrees.median()) if len(degrees) else 0.0,
         "degree_max": int(degrees.max()) if len(degrees) else 0,
@@ -134,13 +157,33 @@ def run_phase3(track: str = "both") -> dict[str, object]:
         edges["source"] = edges["source"].map(lambda s: sym_map.get(s, s))
         edges["target"] = edges["target"].map(lambda s: sym_map.get(s, s))
         edges = edges[edges["source"].isin(net_approved) & edges["target"].isin(net_approved)]
+        # Re-apply frozen conflict rule after HGNC symbol remapping (aliases can collide)
+        edges, remap_collapse = collapse_to_unique_pairs(edges, conflict_rule=load_conflict_rule())
+        (tr_dir / "post_mapping_edge_collapse.json").write_text(
+            __import__("json").dumps(remap_collapse, indent=2) + "\n"
+        )
 
         string_tr = string_edges.copy()
         string_tr["source"] = string_tr["source"].map(lambda s: sym_map.get(s, s) if s in sym_map else s)
         string_tr["target"] = string_tr["target"].map(lambda s: sym_map.get(s, s) if s in sym_map else s)
 
-        # Node universe = expressed ∩ network (NOT DE-filtered)
+        # Node universe = measurable (meta intersection) ∩ network (NOT DE-filtered)
         nodes = sorted(approved & net_approved)
+        universe_provenance = {
+            "n_measurable_meta_genes": int(len(expressed)),
+            "n_measurable_approved": int(len(approved)),
+            "n_causal_network_symbols_input": int(len(net_symbols)),
+            "n_causal_network_matched": int(net_counts.get("matched", 0) + net_counts.get("alias_resolved", 0)),
+            "n_node_universe": int(len(nodes)),
+            "binding_constraint": "curated_causal_network",
+            "note": (
+                f"measurable genes ({len(expressed)}) → causal-network symbols "
+                f"({len(net_symbols)}, of which {net_counts.get('matched', 0)} matched + "
+                f"{net_counts.get('alias_resolved', 0)} alias) → node universe ({len(nodes)}); "
+                "binding constraint is the curated network, not expression."
+            ),
+        }
+        (tr_dir / "node_universe_provenance.json").write_text(json.dumps(universe_provenance, indent=2) + "\n")
         if len(nodes) < 500:
             raise StopAndReportError(
                 f"Node universe collapsed to {len(nodes)} after correct mapping",
@@ -180,16 +223,18 @@ def run_phase3(track: str = "both") -> dict[str, object]:
         summary["network_mapping_counts"] = net_counts
         summary["phase25_mapping_notes"] = map_notes
         summary["n_string_aux_edges"] = int(len(string_tr))
+        summary["node_universe_provenance"] = universe_provenance
         (tr_dir / "network_summary.json").write_text(json.dumps(summary, indent=2, default=str) + "\n")
 
-        features, missingness = build_feature_table(nodes, track=tr, degrees=degrees)
+        features, density_qc, activity_meta = build_feature_table(nodes, track=tr, degrees=degrees)
         # Align to nodes that survived feature build
         nodes = features["gene_symbol"].tolist()
         degrees = degrees.reindex(nodes).fillna(0)
         edges = edges[edges["source"].isin(nodes) & edges["target"].isin(nodes)]
         string_tr = string_tr[string_tr["source"].isin(nodes) & string_tr["target"].isin(nodes)]
         features.to_csv(tr_dir / "node_features.tsv", sep="\t", index=False)
-        pd.DataFrame([missingness]).to_csv(tr_dir / "feature_missingness.tsv", sep="\t", index=False)
+        density_qc.to_csv(tr_dir / "feature_density_qc.tsv", sep="\t", index=False)
+        (tr_dir / "activity_feature_meta.json").write_text(json.dumps(activity_meta, indent=2) + "\n")
 
         labels_series = None
         if tr == "benchmark":
@@ -253,7 +298,8 @@ def run_phase3(track: str = "both") -> dict[str, object]:
         results[tr] = {
             "n_nodes": len(nodes),
             "network_summary": summary,
-            "feature_missingness": missingness,
+            "feature_density_qc": density_qc.to_dict(orient="records"),
+            "activity_feature_meta": activity_meta,
             "controls": controls,
             "pyg": pyg_stats,
             "output_dir": str(tr_dir),

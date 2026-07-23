@@ -59,3 +59,14 @@ plan:
   phase3_cv_folds: 5
   phase3_control_seed: 0
   degree_match_tolerance: 0.15
+  phase5_proximity_substrate_primary: signed_causal_only
+  phase5_proximity_substrate_sensitivity: causal_plus_string_unsigned
+  phase5_proximity_substrate_rationale: Primary = signed causal layer (OmniPath+SIGNOR
+    unique pairs) because Phase 5 signalling-flow requires signed directed edges.
+    Sensitivity = causal + STRING physical edges as unsigned auxiliary connectivity
+    to probe coverage of sparse pharmacology targets without silently replacing the
+    primary substrate. Frozen before any drug-target coverage inspection (Phase 3.5
+    A4).
+  phase5_min_drug_targets_in_substrate: 1
+  phase5_poor_coverage_policy: report_structural_limitation_do_not_switch_substrate
+  feature_min_variance: 1.0e-08

@@ -1,0 +1,61 @@
+GSE11783:
+  match_mode: contains
+  title_regex: "patient:(?P<patient_id>[^-]+)--location:(?P<site_code>[^-]+)--R:(?P<replicate>[^-]+)"
+  site_aliases:
+    healthy: healthy
+    ni: non-ulcer
+    ulcus: ulcer
+  raw_string_map:
+    "disease state: no":
+      group: control
+    "disease state: ic, non-ulcer tissue":
+      group: case
+      site: non-ulcer
+    "disease state: ic, ulcer":
+      group: case
+      site: ulcer
+
+GSE57560:
+  match_mode: contains
+  raw_string_map:
+    "disease state: interstitial cystitis":
+      group: case
+    "disease state: control":
+      group: control
+
+GSE238208:
+  match_mode: contains
+  raw_string_map:
+    "disease: hunner_type_interstitial_cystitis":
+      group: case
+    "disease: mycobacterium bovis bacillus calmette":
+      group: control
+
+GSE75214:
+  # Frozen contrast (Phase 2): UC active colon (involved) vs control colon.
+  # CD / Crohn's / inactive UC / ileum samples are excluded.
+  match_mode: rules
+  rules:
+    - group: case
+      all_of:
+        - "disease: ulcerative colitis"
+        - "disease activity: active"
+        - "tissue: colon"
+    - group: control
+      all_of:
+        - "disease: control"
+        - "tissue: colon"
+    - group: excluded
+      any_of:
+        - "disease: cd"
+        - "disease: crohn's disease"
+        - "disease activity: inactive"
+        - "tissue: ileum"
+
+GSE87466:
+  match_mode: contains
+  raw_string_map:
+    "disease: ulcerative colitis":
+      group: case
+    "disease: normal":
+      group: control

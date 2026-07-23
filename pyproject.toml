@@ -19,6 +19,7 @@ dependencies = [
     "pyyaml",
     "pytest",
     "requests",
+    "rpy2",
     "scikit-learn",
     "scipy",
     "statsmodels",

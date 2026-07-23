@@ -47,3 +47,17 @@
 | 0.2 | H7 unsupervised-only; mandatory GSE238208 + permuted-signature defences | No TARGET labels after A6.1 |
 | A1 | `FROZEN_PLAN.yaml` single source of truth; value-parsing plan-consistency | Substring tests were not real invariants |
 | A2–A4 | Append-only manifests; no hardcoded allow-dirty; hard-fail git; plan_hash; device warnings; real GTEx/HPA/SIGNOR checks; seeding; tmp_path tests | Phase 1 defects |
+
+
+## 2026-07-23 — Phase 2 build resolutions (pre-results for DE/meta; runtime phenotype lock)
+
+**Outcome-dependent?** No for method choices; phenotype-map strings locked from series-matrix inspection before DE.
+
+| ID | Change | Reason |
+|---|---|---|
+| P2.1 | GSE238208 phenotype map locked to `disease: hunner_type_interstitial_cystitis` (case) and `disease: mycobacterium bovis bacillus calmette…` (control/BCG) | Prior draft keys (`diagnosis: hunner`) did not match series characteristics; stop-and-report fired correctly |
+| P2.2 | Affymetrix/Agilent processing uses author-normalised series matrix; CEL-level RMA not primary in this build | CEL RAW present for GSE11783 but series matrix is the validated author-normalised table used for phenotype-aligned DE |
+| P2.3 | Signature bootstrap (≥1000) propagates stratified Hedges' g → DerSimonian–Laird meta; does **not** re-run limma eBayes per resample | Computational resolution; limma remains the observed-sample primary DE artifact; meta identity statistic is Hedges' g |
+| P2.4 | Probe collapse rule = max-mean; non-protein-coding rejection via `validate_gene_record` when biotype present | Matches §B2; GPL570 often omits biotype → rejection count may be 0 with note |
+
+| P2.5 | GSE75214 frozen contrast = **UC active colon vs control colon**; CD/Crohn/inactive UC/ileum excluded (109 samples) | Runtime series characteristics; involved-vs-control chosen over involved-vs-uninvolved |

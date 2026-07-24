@@ -27,6 +27,21 @@ def signed_causal_edges(edges: pd.DataFrame, plan: dict[str, object] | None = No
     return edges.loc[keep].copy()
 
 
+def unsigned_full_causal_edges(edges: pd.DataFrame, plan: dict[str, object] | None = None) -> pd.DataFrame:
+    """Directed causal edges for unsigned-full: stim + inhib + unsigned_directed.
+
+    Ambiguous edges remain excluded (conflicting signs ≠ merely unsigned).
+    Used only with ignore_sign=True so zero-signed unsigned_directed edges
+    contribute unit weight connectivity without inventing a sign.
+    """
+
+    plan = plan or load_plan()
+    if plan["phase5_ambiguous_edge_policy"] != "exclude_from_signed_propagation":
+        raise StopAndReportError("Unexpected ambiguous edge policy", reason="policy-drift")
+    keep = edges["relation_type"].isin(["stimulation", "inhibition", "unsigned_directed"])
+    return edges.loc[keep].copy()
+
+
 def substrate_nodes(edges: pd.DataFrame) -> set[str]:
     if edges.empty:
         return set()
@@ -83,6 +98,7 @@ def build_substrates(
         ).sum()
     )
     signed = signed_causal_edges(causal_edges, plan)
+    full_unsigned = unsigned_full_causal_edges(causal_edges, plan)
     primary_nodes = substrate_nodes(signed)
     # Full causal node set (pre-exclusion) for isolate accounting relative to the TARGET/BENCHMARK graph
     all_causal_nodes = substrate_nodes(causal_edges)
@@ -90,13 +106,23 @@ def build_substrates(
     conn_signed["n_causal_edges_before_exclusion"] = n_causal
     conn_signed["n_edges_excluded"] = n_excluded
     conn_signed["fraction_edges_excluded"] = float(n_excluded / max(n_causal, 1))
+    conn_full = connectivity_report(
+        full_unsigned, all_nodes=all_causal_nodes, track="unsigned_full_directed"
+    )
+    conn_full["n_causal_edges_before_exclusion"] = n_causal
+    conn_full["n_ambiguous_excluded"] = int((causal_edges["relation_type"] == "ambiguous").sum())
     primary = {
         "name": plan["phase5_proximity_substrate_primary"],
         "signed_edges": signed,
+        "full_unsigned_edges": full_unsigned,
+        "causal_edges": causal_edges,
         "nodes": primary_nodes,
+        "full_unsigned_nodes": substrate_nodes(full_unsigned),
         "n_signed_edges": int(len(signed)),
+        "n_full_unsigned_edges": int(len(full_unsigned)),
         "n_nodes": int(len(primary_nodes)),
         "connectivity": conn_signed,
+        "connectivity_unsigned_full": conn_full,
     }
     if string_edges is None or string_edges.empty:
         combined_nodes = primary_nodes

@@ -44,11 +44,18 @@ def build_signed_adjacency(
         if s not in index or t not in index:
             continue
         sign = int(row["sign"])
-        if sign not in (1, -1):
-            continue
+        if ignore_sign:
+            # Allow unsigned_directed (sign=0) as unit-weight connectivity.
+            if sign not in (-1, 0, 1):
+                continue
+            weight = 1.0
+        else:
+            if sign not in (1, -1):
+                continue
+            weight = float(sign)
         rows.append(index[s])
         cols.append(index[t])
-        data.append(1.0 if ignore_sign else float(sign))
+        data.append(weight)
     if not rows:
         return sparse.csr_matrix((n, n), dtype=float)
     mat = sparse.csr_matrix((data, (rows, cols)), shape=(n, n), dtype=float)

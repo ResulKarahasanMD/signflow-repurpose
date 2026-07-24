@@ -1,0 +1,24 @@
+schema_version: 1
+purpose: IC/BPS soft-positive drugs reported at their ranks on the TARGET track;
+  never forced into enrichment denominators or treated as gold labels.
+access_date_utc: '2026-07-24'
+source_note: Names from Phase 0 literature / ClinicalTrials examples; ChEMBL IDs
+  resolved against the disease-agnostic approved-drug universe.
+drugs:
+- name: pentosan_polysulfate_sodium
+  chembl_ids:
+  - CHEMBL1201516
+  note: Sole OT APPROVAL-stage agent for MONDO_0018301
+- name: amitriptyline
+  chembl_ids:
+  - CHEMBL629
+  - CHEMBL1200964
+  note: Soft positive; report whichever ID is scored (prefer hydrochloride if present)
+- name: cyclosporine
+  chembl_ids:
+  - CHEMBL160
+  note: Soft positive (pharmacotherapy NMA signal)
+- name: mirabegron
+  chembl_ids:
+  - CHEMBL2095212
+  note: Soft positive (symptomatic / investigational context)

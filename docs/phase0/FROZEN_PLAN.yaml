@@ -104,7 +104,17 @@ plan:
   phase5_score_aggregation: sum_over_module_opposition
   phase5_score_variant_primary: signed
   phase5_score_variant_coprimary: unsigned
+  phase5_score_variant_unsigned_matched: unsigned_matched
+  phase5_score_variant_unsigned_full: unsigned_full
   phase5_score_variant_decision: signed_must_exceed_unsigned_beyond_detectable_threshold_else_report_no_measurable_sign_benefit
+  phase5_score_three_arm_note: "signed and unsigned_matched share the signed-only (reduced) edge set; unsigned_full uses stim+inhib+unsigned_directed. Binding sign decision = signed vs unsigned_matched. Connectivity cost = unsigned_matched vs unsigned_full. Defect-driven completion of the frozen comparison (P5.5.A2)."
+  phase5_soft_positives_path: configs/target_soft_positives.yaml
+  phase5_h7_top_k: 20
+  phase5_h7_n_bootstrap: 1000
+  phase5_control_graph_variants:
+  - rewired
+  - edge_shuffled
+  - sign_shuffled
   phase5_score_k_values:
   - 20
   - 50

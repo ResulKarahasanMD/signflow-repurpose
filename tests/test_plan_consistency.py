@@ -246,6 +246,12 @@ def test_frozen_plan_matches_config_and_docs():
     # Phase 5.3 / 5.4 freezes
     assert frozen_plan["phase5_score_variant_primary"] == "signed"
     assert frozen_plan["phase5_score_variant_coprimary"] == "unsigned"
+    assert frozen_plan["phase5_score_variant_unsigned_matched"] == "unsigned_matched"
+    assert frozen_plan["phase5_score_variant_unsigned_full"] == "unsigned_full"
+    assert frozen_plan["phase5_h7_top_k"] == 20
+    assert frozen_plan["phase5_h7_n_bootstrap"] == 1000
+    assert frozen_plan["phase5_control_graph_variants"] == ["rewired", "edge_shuffled", "sign_shuffled"]
+    assert Path(frozen_plan["phase5_soft_positives_path"]).exists()
     assert frozen_plan["phase5_candidate_pool_rule"] == "disease_agnostic_approved_drugs"
     assert frozen_plan["phase5_candidate_pool_disease_conditioning"] == "forbidden"
     assert frozen_plan["phase5_candidate_pool_min_in_substrate"] == 500

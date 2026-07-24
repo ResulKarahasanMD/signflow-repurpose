@@ -252,3 +252,14 @@ def test_frozen_plan_matches_config_and_docs():
     assert frozen_plan["phase5_candidate_pool_gold_prevalence_ceiling"] == 0.10
     assert "ion_channel" in frozen_plan["phase5_target_class_taxonomy"]
     assert frozen_plan["phase5_score_k_values"] == [20, 50, 100, 250]
+    assert frozen_plan["phase5_candidate_pool_sha256"] == (
+        "f748e4b93a24bd491d6040b0797ed081adc9b010484d19532ff3b4e4261d294c"
+    )
+    assert frozen_plan["phase5_candidate_pool_n_universe"] == 4225
+    assert frozen_plan["phase5_candidate_pool_n_gold"] == 29
+    pool_path = Path(frozen_plan["phase5_candidate_pool_path"])
+    if pool_path.exists():
+        import hashlib
+
+        digest = hashlib.sha256(pool_path.read_bytes()).hexdigest()
+        assert digest == frozen_plan["phase5_candidate_pool_sha256"]

@@ -321,7 +321,7 @@ def run_benchmark_suite(bundle: dict[str, object], output_dir: str | Path) -> di
                     compute_metrics(
                         yt,
                         st,
-                        probabilities=probs if probs is not None else None,
+                        probabilities=st if probs is not None else None,
                         regime="degree_matched",
                     )["auprc"]
                 )

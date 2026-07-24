@@ -132,7 +132,10 @@ def attach_nulls_and_fdr(
     seed: int,
 ) -> pd.DataFrame:
     out_rows = []
-    for i, row in ranking.iterrows():
+    n_rows = len(ranking)
+    for i, (_, row) in enumerate(ranking.iterrows(), start=1):
+        if i == 1 or i % 100 == 0 or i == n_rows:
+            print(f"[phase5] nulls {i}/{n_rows}", flush=True)
         genes = row.get("targets_in_substrate") or []
         if isinstance(genes, str):
             genes = [g for g in genes.split(",") if g]

@@ -120,7 +120,10 @@ plan:
   - opentargets_approved_annotation_optional
   phase5_candidate_pool_disease_conditioning: forbidden
   phase5_candidate_pool_path: data/raw/drugs/pool/approved_drug_universe.tsv
-  phase5_candidate_pool_sha256: null
+  phase5_candidate_pool_sha256: f748e4b93a24bd491d6040b0797ed081adc9b010484d19532ff3b4e4261d294c
+  phase5_candidate_pool_n_universe: 4225
+  phase5_candidate_pool_n_gold: 29
+  phase5_candidate_pool_access_date: '2026-07-24'
   phase5_candidate_pool_min_in_substrate: 500
   phase5_candidate_pool_gold_prevalence_ceiling: 0.10
   phase5_conformal_module_estimator: logistic_features_only

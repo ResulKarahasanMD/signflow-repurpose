@@ -136,19 +136,26 @@ Matched converged budget (same max_epochs/patience); underpowered with ~246 posi
 
 ## Additional splits (A2 / P4.6.6)
 
-Hub-stratified and LOSO extended beyond logistic to rwr and gatv2. Exact per-model numbers are filled by `scripts/phase46_posthoc.py` into `benchmark/phase46_posthoc.json` / updated `benchmark_results.json`.
-
 ### Hub-stratified CV
-- logistic: AUPRC 0.651 ± 0.066 over 5 folds (pre-existing).
-- rwr / gatv2: see posthoc artifact.
+| Model | AUPRC mean±sd | n folds |
+|---|---:|---:|
+| logistic | 0.651 ± 0.066 | 5 |
+| rwr | 0.526 ± 0.026 | 5 |
+| gatv2 | 0.579 ± 0.085 | 5 |
 
 ### Leave-one-study-out
-- logistic: AUPRC 0.641 ± 0.020 over 2 folds (pre-existing).
-- rwr / gatv2: see posthoc artifact.
+| Model | AUPRC mean±sd | n folds |
+|---|---:|---:|
+| logistic | 0.641 ± 0.020 | 2 |
+| rwr | 0.465 ± 0.007 | 2 |
+| gatv2 | 0.587 ± 0.079 | 2 |
 
 ## Paired-difference bootstrap (P4.6.5; exploratory)
 
-Pre-committed exploratory contrast: gatv2 − rwr on seed-0 pooled OOF with n_boot=1000. **W1 CI-overlap verdict remains binding.** Results written by posthoc script.
+Pre-committed exploratory contrast: gatv2 − rwr on seed-0 pooled OOF, n_boot=1000.
+
+- ΔAUPRC mean = **0.069** [0.004, 0.136]; P(Δ≤0)=0.019
+- **W1 CI-overlap verdict remains binding** (`no_gnn_advantage`; MDD≈0.128).
 
 ## Convergence diagnostics (A1)
 
@@ -165,9 +172,11 @@ All runs early-stopped; none hit the 500-epoch cap without plateauing.
 
 | α | mean set size (pooled) | empirical coverage (pooled) |
 |---:|---:|---:|
-| 0.1 | *(filled by phase46_posthoc)* | *(filled by phase46_posthoc)* |
-| 0.05 | *(filled by phase46_posthoc)* | *(filled by phase46_posthoc)* |
-| 0.2 | *(filled by phase46_posthoc)* | *(filled by phase46_posthoc)* |
+| 0.1 | 1.786 | 0.921 |
+| 0.05 | 1.894 | 0.961 |
+| 0.2 | 1.500 | 0.807 |
+
+Fold-0-only (superseded): α=0.1 → 1.808 / 0.939.
 
 Non-claim: Conformal coverage is over the gene/drug population under the labelled-data distribution. It does not quantify sampling uncertainty over patients, and does not imply the disease signature generalises to new IC/BPS cohorts.
 

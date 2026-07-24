@@ -145,7 +145,12 @@ def main() -> None:
                 if len(np.unique(yt)) < 2:
                     continue
                 fold_auprcs.append(
-                    compute_metrics(yt, st, probabilities=probs, regime="degree_matched")["auprc"]
+                    compute_metrics(
+                        yt,
+                        st,
+                        probabilities=st if probs is not None else None,
+                        regime="degree_matched",
+                    )["auprc"]
                 )
             by_model[model] = {
                 "model": model,

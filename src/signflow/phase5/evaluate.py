@@ -194,7 +194,10 @@ def _rank_variant(
         variant=variant,
     )
     rows = []
-    for chembl_id, group in targets.groupby("chembl_id"):
+    groups = list(targets.groupby("chembl_id"))
+    for i, (chembl_id, group) in enumerate(groups, start=1):
+        if i == 1 or i % 200 == 0 or i == len(groups):
+            print(f"[phase5] score {variant} observed {i}/{len(groups)}", flush=True)
         meta_rows = drug_summary.loc[drug_summary["chembl_id"] == chembl_id]
         if meta_rows.empty:
             continue
@@ -225,6 +228,7 @@ def _rank_variant(
         return scorer.score_genes(gene_list)
 
     if len(ranking):
+        print(f"[phase5] nulls {variant} n_drugs={len(ranking)} n_perm={plan['null_permutations']}", flush=True)
         ranking = attach_nulls_and_fdr(
             ranking,
             degrees=degrees,

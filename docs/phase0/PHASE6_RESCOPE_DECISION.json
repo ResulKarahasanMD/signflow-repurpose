@@ -1,0 +1,20 @@
+{
+  "decided_at_utc": "20260724T075949Z",
+  "h7_decision": "non_informative",
+  "h7_futile": true,
+  "benchmark_fdr_survivors": 0,
+  "benchmark_enrichment_at_20": 0.0,
+  "phase6_mode": "descriptive_characterisation_of_frozen_seed_module_only",
+  "always_run": [
+    "H6_convergence_test_on_BENCHMARK_k20_bootstrap_over_gold"
+  ],
+  "carry_forward_mandatory_target_defences": [
+    "GSE238208_inflammation_specificity",
+    "permuted_signature_null"
+  ],
+  "do_not": [
+    "add_axes_or_loosen_thresholds_to_manufacture_survivors",
+    "run_convergence_ranking_on_non_informative_target_list"
+  ],
+  "note": "Recorded before Phase 6 build. If TARGET fails H7, axes run as descriptive characterisation of the frozen seed module only; report axis disagreement without a fused rank. H6 on BENCHMARK remains answerable even with weak signal."
+}

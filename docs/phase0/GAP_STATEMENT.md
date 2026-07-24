@@ -2,9 +2,9 @@
 
 **Project working title:** *SignFlow-Repurpose*: controlled signed-network prioritization and multi-evidence triangulation for IC/BPS (application) with ulcerative colitis (methods benchmark).
 
-**Date:** 2026-07-23 (UTC)  
-**Status:** Phase 0 data gate **PASS (conditional)**; Phase 0.5 amendments applied.  
-**See:** [`DATA_AVAILABILITY.md`](DATA_AVAILABILITY.md) · [`METHODS_PRIOR_ART.md`](METHODS_PRIOR_ART.md) · [`LABEL_PROVENANCE.md`](LABEL_PROVENANCE.md) · [`ANALYSIS_PLAN.md`](ANALYSIS_PLAN.md)
+**Date:** 2026-07-24 (UTC)  
+**Status:** Phase 5 completions (§A) done; TARGET H7 **non-informative**; Phase 6 rescope recorded; paper identity reframed (P5.5.C).  
+**See:** [`DATA_AVAILABILITY.md`](DATA_AVAILABILITY.md) · [`METHODS_PRIOR_ART.md`](METHODS_PRIOR_ART.md) · [`LABEL_PROVENANCE.md`](LABEL_PROVENANCE.md) · [`ANALYSIS_PLAN.md`](ANALYSIS_PLAN.md) · [`PHASE6_RESCOPE_DECISION.json`](PHASE6_RESCOPE_DECISION.json)
 
 ---
 
@@ -56,7 +56,7 @@ Full differentiation table: [`METHODS_PRIOR_ART.md`](METHODS_PRIOR_ART.md).
 | Claim component | Phase 4.5 result (pooled 5-fold OOF; repaired sign-shuffle) |
 |---|---|
 | **C1 (signed/directed graph as information)** | For valid signed models: **real ≈ sign_shuffled** but **real > rewired** (gatv2 0.590 / 0.588 / 0.516; ssl_gatv2 0.579 / 0.589 / 0.503). **Topology is used; sign is not detectably used.** |
-| **C4 (sign-consistent drug scoring)** | Phase 5 freezes signed as primary and unsigned as co-primary. If signed does not exceed unsigned beyond the detectable threshold, report that **sign contributed no measurable benefit to drug scoring**, consistent with this control. |
+| **C4 (sign-consistent drug scoring)** | Phase 5 three-arm: signed ≈ unsigned_matched on the **same reduced** edge set (paired AUPRC Δ ≈ 0; binding decision = no measurable sign benefit). unsigned_full (connectivity diagnostic) does not rescue sign. Consistent with Phase 4 control. |
 | **Power caveat** | W1 MDD ≈ 0.128; observed GATv2−RWR gap ≈ 0.066 < MDD. Negative / null sign findings are limited by power, not proof of absence. |
 
 ---
@@ -95,11 +95,27 @@ Task definitions (nodes/edges/features/labels/outputs/falsifiers) remain as in P
 
 ---
 
-## 6. Venue suggestions (re-scoped)
+## 6. Venue suggestions (re-scoped — Phase 5.5 / P5.5.C)
 
-- **Preferred:** translational/urology or systems-biology **application** venues (*Neurourology and Urodynamics*, *BMC Urology*, computational biology application tracks) emphasizing controlled analysis + honest limitations.  
-- **Methods journal:** only if lead story is leakage-aware benchmark design / negative-result-capable GNN-vs-RWR — **not** “a new foundation GNN.”  
+**Reframing (results, not preference):** With zero FDR survivors, zero enrichment at the primary k values (@20/@50) on the disease-agnostic BENCHMARK, and TARGET failing H7 futility (mean top-20 Jaccard ≈ 0.051 ≪ 0.20), this is **not** an IC/BPS repurposing application paper with candidates. The honest contribution is an empirical demonstration, under pre-registration and leakage control, that **curated signed causal networks are too sparse and too incompletely signed to support signed-flow drug prioritization**, together with a negative-result-capable benchmark design that made that conclusion reportable rather than hidden.
+
+| Finding | Status |
+|---|---|
+| No usable curated IC/BPS disease-gene labels under non-drug/non-literature evidence | Reported negative |
+| TARGET cohorts do not replicate at the extremes; meta is single-cohort dominated | Reported negative |
+| GNN shows no advantage over RWR (MDD 0.128); RWR itself at chance | Reported negative |
+| Features + `log_degree` is the strongest model | Positive but unflattering to the design |
+| Edge sign contributes nothing detectable (Phase 4 control + Phase 5 signed vs unsigned_matched) | Reported negative |
+| Conformal sets cover but are uninformative (mean size ~1.79 of 2) | Reported negative |
+| Drug scoring: weak global signal (~3.4× chance AUPRC), no top-k@20/50, no FDR survivors | Mixed → practically null |
+
+**Recurring explanation:** substrate sparsity — 7 773 nodes, median degree 3, 274 components (1 313 after signed exclusion), receptor-class coverage dominated by residual “other signalling enzyme.”
+
+- **Preferred now:** bioinformatics **methods** journals, or dedicated **negative-results / registered-report** tracks emphasizing pre-registered null capability and signed-network sparsity limits.  
+- **Demoted:** translational/urology application venues (*Neurourology and Urodynamics*, *BMC Urology*) that fit a paper with surviving candidates — there are none.  
 - **Not appropriate:** pitching as TxGNN competitor or *Nat Med*-class methods priority.
+
+Logged in `ANALYSIS_PLAN_AMENDMENTS.md` (P5.5.C). Phase 6 mode = descriptive characterisation of the frozen seed module only (`docs/phase0/PHASE6_RESCOPE_DECISION.json`); do not manufacture survivors.
 
 ---
 

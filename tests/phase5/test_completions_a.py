@@ -55,9 +55,14 @@ def test_differential_coverage_and_acquired_sensitivity():
             "n_targets_in_substrate": [1, 0, 1, 1, 0],
         }
     )
-    diff = differential_coverage_rates({"n_drugs_total": 5}, summary)
+    # Acquired universe larger than mapped summary (A3 denominator)
+    diff = differential_coverage_rates({"n_drugs_total": 5}, summary, n_acquired_universe=10)
     assert diff["gold_coverage_rate"] == 0.5
     assert diff["non_gold_coverage_rate"] == pytest.approx(2 / 3)
+    assert diff["n_acquired_universe"] == 10
+    assert diff["gold_prevalence_acquired"] == pytest.approx(0.2)
+    # scored = {g1,n1,n2}; gold_in_scored=1 → prevalence 1/3; inflation (1/3)/0.2 - 1
+    assert diff["relative_inflation"] == pytest.approx((1 / 3) / 0.2 - 1)
 
     ranking = pd.DataFrame(
         {
@@ -107,3 +112,30 @@ def test_pairwise_jaccard_and_connectivity_compare():
     b = pd.DataFrame({"chembl_id": ["1", "2", "3"], "is_gold": [True, False, False], "score": [0.8, 0.6, 0.05]})
     out = compare_connectivity_cost(a, b, n_boot=20)
     assert "auprc_unsigned_matched" in out
+
+
+def test_sensitivity_substrate_includes_string_edges():
+    causal = pd.DataFrame(
+        {
+            "source": ["A"],
+            "target": ["B"],
+            "relation_type": ["stimulation"],
+            "sign": [1],
+        }
+    )
+    string = pd.DataFrame(
+        {
+            "source": ["B"],
+            "target": ["C"],
+            "sign": [0],
+            "relation_type": ["string_physical"],
+            "undirected": [True],
+        }
+    )
+    from signflow.phase5.substrate import build_substrates
+
+    built = build_substrates(causal, string)
+    sens = built["sensitivity"]["signed_edges"]
+    assert "string_unsigned" in set(sens["relation_type"])
+    assert {"A", "B", "C"} <= set(sens["source"].astype(str)) | set(sens["target"].astype(str))
+    assert built["sensitivity"]["n_sensitivity_edges"] > built["primary"]["n_signed_edges"]

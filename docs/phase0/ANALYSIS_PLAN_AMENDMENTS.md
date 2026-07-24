@@ -228,3 +228,25 @@
 | Signed vs unsigned decision | `sign_contributed_no_measurable_benefit_to_drug_scoring` |
 | BH-FDR survivors | **0** |
 | Connectivity | 34.3% edges excluded; 1313 components; 1232 isolates |
+
+
+## 2026-07-24 — Phase 5.5 report completions + Phase 6 rescope (§A/B/C)
+
+**Outcome-dependent?** Partially. §A2 is a **defect-driven completion** of the frozen signed-vs-unsigned comparison (connectivity confound), not a new hypothesis — the frozen decision rule is unchanged. §A1/A3/A4 are reporting completions of already-computed metrics. §A5 applies the pre-registered H7 futility rule to TARGET. §B/§C decisions are **results-dependent** (zero FDR survivors; H7 outcome) and are recorded as such — not preference.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.5.A1 | Report rediscovery as a required pair: weak global discrimination **and** no top-k / no FDR utility; chance baselines beside every metric | Prior narrative risked reporting only one half |
+| P5.5.A2 | Three-arm comparison: `signed` / `unsigned_matched` (same reduced edge set) / `unsigned_full` (stim+inhib+unsigned_directed). Binding sign decision = signed vs unsigned_matched; connectivity cost = matched vs full | Defect: without matched edge sets, sign claim conflates with connectivity loss after 34.3% edge exclusion |
+| P5.5.A3 | Differential gold vs non-gold coverage rates; acquired-pool sensitivity with uncovered drugs as misses | Gold prevalence inflates 0.69%→1.02% because coverage correlates with approval |
+| P5.5.A4 | Report enrichment@k for all frozen k∈{20,50,100,250} with chance expectations | k=100/250 were computed but under-reported; estimable at ~1% prevalence |
+| P5.5.A5 | TARGET: both seed sets × both substrates; soft positives at ranks; control-graph rankings; apply H7 (J=0.20) → **non_informative** (mean Jaccard 0.051) | Track was present only as a stub; H7 binds |
+| P5.5.B | Phase 6 mode = descriptive characterisation of frozen seed module only; H6 on BENCHMARK retained; no fused TARGET rank | Zero FDR / zero top-k on BENCHMARK; TARGET H7 failed |
+| P5.5.C | Reframe `GAP_STATEMENT.md` §6 toward methods / negative-results venue; paper identity = sparse signed-network limitation under pre-registration | Results, not preference — no candidates to pitch as application paper |
+
+**Stamp:** `20260724T075949Z` (completions; reuses rebuild `20260724T004001Z` for signed/unsigned_matched).
+
+**Three-arm headline:** signed AUPRC 0.035 ≈ unsigned_matched 0.035 ≈ unsigned_full 0.033 (chance 0.010); binding decision unchanged (`sign_contributed_no_measurable_benefit_to_drug_scoring`). Connectivity cost of exclusion is small on pool-wide AUPRC.
+
+**Standing rules unchanged.** GSE238208 inflammation-specificity and the permuted-signature null remain outstanding mandatory TARGET defences (Phase 1.5 §0.2).
+

@@ -42,6 +42,18 @@ def unsigned_full_causal_edges(edges: pd.DataFrame, plan: dict[str, object] | No
     return edges.loc[keep].copy()
 
 
+def prepare_string_unsigned_edges(string_edges: pd.DataFrame) -> pd.DataFrame:
+    """STRING physical links as bidirectional unit-weight unsigned connectivity."""
+
+    if string_edges is None or string_edges.empty:
+        return pd.DataFrame(columns=["source", "target", "sign", "relation_type"])
+    forward = string_edges[["source", "target"]].copy()
+    forward["sign"] = 1
+    forward["relation_type"] = "string_unsigned"
+    reverse = forward.rename(columns={"source": "target", "target": "source"})
+    return pd.concat([forward, reverse], ignore_index=True)
+
+
 def substrate_nodes(edges: pd.DataFrame) -> set[str]:
     if edges.empty:
         return set()
@@ -126,19 +138,22 @@ def build_substrates(
     }
     if string_edges is None or string_edges.empty:
         combined_nodes = primary_nodes
-        sens_edges = signed
+        sens_edges = signed.copy()
+        string_prepared = pd.DataFrame(columns=["source", "target", "sign", "relation_type"])
     else:
+        string_prepared = prepare_string_unsigned_edges(string_edges)
         string_nodes = substrate_nodes(string_edges)
         combined_nodes = primary_nodes | string_nodes
-        sens_edges = signed
-    conn_sens = connectivity_report(sens_edges, all_nodes=combined_nodes, track="sensitivity_signed_core")
+        sens_edges = pd.concat([signed, string_prepared], ignore_index=True)
+    conn_sens = connectivity_report(sens_edges, all_nodes=combined_nodes, track="sensitivity_causal_plus_string")
     sensitivity = {
         "name": plan["phase5_proximity_substrate_sensitivity"],
-        "signed_edges": signed,
+        "signed_edges": sens_edges,  # signed causal + STRING unsigned connectivity
         "string_edges": string_edges,
         "nodes": combined_nodes,
         "n_signed_edges": int(len(signed)),
         "n_string_edges": int(len(string_edges)) if string_edges is not None else 0,
+        "n_sensitivity_edges": int(len(sens_edges)),
         "n_nodes": int(len(combined_nodes)),
         "string_policy": plan["phase5_string_unsigned_edge_policy"],
         "connectivity": conn_sens,

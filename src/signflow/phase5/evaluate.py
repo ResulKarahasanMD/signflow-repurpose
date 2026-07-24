@@ -393,8 +393,17 @@ def acquired_pool_sensitivity(
     return metrics
 
 
-def differential_coverage_rates(coverage_report: dict[str, object], drug_summary: pd.DataFrame) -> dict[str, object]:
-    """Gold vs non-gold substrate coverage rates (A3)."""
+def differential_coverage_rates(
+    coverage_report: dict[str, object],
+    drug_summary: pd.DataFrame,
+    *,
+    n_acquired_universe: int | None = None,
+) -> dict[str, object]:
+    """Gold vs non-gold substrate coverage rates (A3).
+
+    Relative inflation uses the acquired ranking universe (ChEMBL max_phase=4 ∪ gold),
+    not the mapped drug-summary size.
+    """
 
     gold = drug_summary["is_gold"].astype(bool)
     eligible = drug_summary["n_targets_in_substrate"] >= 1
@@ -402,25 +411,29 @@ def differential_coverage_rates(coverage_report: dict[str, object], drug_summary
     n_non = int((~gold).sum())
     gold_cov = float(eligible[gold].mean()) if n_gold else float("nan")
     non_cov = float(eligible[~gold].mean()) if n_non else float("nan")
-    acquired_n = int(coverage_report.get("n_drugs_total", len(drug_summary)))
-    # Prefer universe sizes from pool when available via report fields
     scored_n = int(eligible.sum())
     gold_in_scored = int((gold & eligible).sum())
+    acquired_n = int(n_acquired_universe) if n_acquired_universe is not None else int(
+        coverage_report.get("n_acquired_universe")
+        or coverage_report.get("n_universe")
+        or coverage_report.get("n_drugs_total")
+        or len(drug_summary)
+    )
+    gold_prev_acquired = float(n_gold / max(acquired_n, 1))
+    gold_prev_scored = float(gold_in_scored / max(scored_n, 1))
     return {
         "n_gold": n_gold,
         "n_non_gold": n_non,
+        "n_acquired_universe": acquired_n,
         "gold_coverage_rate": gold_cov,
         "non_gold_coverage_rate": non_cov,
-        "relative_inflation": float(
-            (gold_in_scored / max(scored_n, 1)) / max(n_gold / max(acquired_n, 1), 1e-12) - 1.0
-        )
-        if acquired_n and n_gold
-        else float("nan"),
-        "gold_prevalence_acquired_mapped": float(n_gold / max(acquired_n, 1)),
-        "gold_prevalence_scored": float(gold_in_scored / max(scored_n, 1)),
+        "gold_prevalence_acquired": gold_prev_acquired,
+        "gold_prevalence_scored": gold_prev_scored,
+        "relative_inflation": float(gold_prev_scored / max(gold_prev_acquired, 1e-12) - 1.0),
         "note": (
-            "Gold prevalence rises from acquired/mapped pool to scored pool when substrate "
-            "coverage correlates with approval status; report rates separately."
+            "Gold prevalence rises from acquired universe to scored pool when substrate "
+            "coverage correlates with approval status; report rates separately. "
+            "Acquired denominator = disease-agnostic approved universe ∪ gold."
         ),
     }
 
@@ -576,7 +589,11 @@ def run_benchmark_evaluation(
     signed_ranking.to_csv(primary_path, sep="\t", index=False)
 
     acquired_sens = acquired_pool_sensitivity(signed_ranking, drug_universe)
-    diff_cov = differential_coverage_rates({"n_drugs_total": int(len(drug_summary))}, drug_summary)
+    diff_cov = differential_coverage_rates(
+        {"n_drugs_total": int(len(drug_summary))},
+        drug_summary,
+        n_acquired_universe=int(len(drug_universe.drop_duplicates("chembl_id"))),
+    )
 
     result = {
         "module_paths": mod_paths,

@@ -195,7 +195,13 @@ def _rank_unsigned_full(
     meta = drug_universe[["chembl_id", "is_gold", "canonical_group", "pref_name"]].drop_duplicates("chembl_id")
     from signflow.phase5.drug_targets import drug_level_target_summary
 
-    drug_summary = drug_level_target_summary(targets, set(nodes)).merge(meta, on="chembl_id", how="left")
+    drug_summary = drug_level_target_summary(targets, set(nodes))
+    # Avoid is_gold_x / is_gold_y collisions when the summary already carries gold flags.
+    drop_cols = [c for c in ("is_gold", "canonical_group", "pref_name") if c in drug_summary.columns]
+    if drop_cols:
+        drug_summary = drug_summary.drop(columns=drop_cols)
+    drug_summary = drug_summary.merge(meta, on="chembl_id", how="left")
+    drug_summary["is_gold"] = drug_summary["is_gold"].fillna(False).astype(bool)
 
     scorer = CachedFlowScorer(
         nodes,
@@ -390,7 +396,8 @@ def main() -> None:
             how="left",
         )
     cov_report = json.loads((out / "coverage_report.json").read_text())
-    diff_cov = differential_coverage_rates(cov_report, cov_summary)
+    n_universe = int(len(drug_universe.drop_duplicates("chembl_id")))
+    diff_cov = differential_coverage_rates(cov_report, cov_summary, n_acquired_universe=n_universe)
     acquired_sens = acquired_pool_sensitivity(signed, drug_universe)
 
     # Load prior BH survivors / spearman from prior summary if present

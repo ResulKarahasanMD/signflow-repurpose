@@ -250,3 +250,21 @@
 
 **Standing rules unchanged.** GSE238208 inflammation-specificity and the permuted-signature null remain outstanding mandatory TARGET defences (Phase 1.5 §0.2).
 
+
+## 2026-07-24 — Phase 5 final diagnostics (§A1–A4) + Phase 6 build under recorded rescope
+
+**Outcome-dependent?** No. §A1–A4 report already-defined metrics on already-frozen artifacts (benchmark control graphs were built in Phase 3; module/direction held fixed). Phase 6 is built to the **pre-recorded** `PHASE6_RESCOPE_DECISION.json`; the two defences execute pre-registered Phase 1.5 §0.2 tests; H6 applies the pre-registered rule. Interpretations for §A1 and §B3 were committed **before** running. Docs: `docs/phase5/FINAL_DIAGNOSTICS.md`, `docs/phase6/EXIT_REPORT.md`.
+
+| ID | Change | Reason / outcome |
+|---|---|---|
+| A1 | BENCHMARK control-graph AUPRC/AUROC (real vs rewired / edge_shuffled / sign_shuffled), n_boot=1000 CIs, chance baseline, Spearman(scores) vs real; module + disease direction held fixed. `scripts/run_phase5_a1_control_graphs.py` | **Decisive.** Real AUPRC 0.035 does **not** materially exceed controls (all CIs overlap; gaps ≪ MDD ≈0.045; score Spearman 0.74–0.80) → control-graph score carries **no network information**; discrimination is from drug target sets + signature, not propagation. |
+| A2 | Invariance/instability panel: substrate-change Jaccard 0.905, 34.3% edge-loss ΔAUPRC ≈0.002, H7 Jaccard 0.051, plus A1 real-vs-control score Spearman. | Quantifies network-invariance directly; ranking dominated by signature + injection term, unstable to signature. |
+| A3 | Top-50 non-gold profile (targets, mean/max degree, ATC) vs gold and pool. `scripts/run_phase5_a3_top50_profile.py` | Top-50 not more promiscuous than gold; hub-enriched vs pool; dominated by antineoplastic/immunomodulating + musculoskeletal ATC → injection/signature-alignment drives ranking. |
+| A4 | Limitations text: pentosan polysulfate sodium (sole APPROVAL agent for MONDO_0018301) unscoreable in principle by target-based network methods (non-protein-target/polysaccharide/barrier class); coverage caveat (gold 100% vs non-gold 88.5%; prevalence 0.69%→1.02%, +49%) attached to every enrichment figure. | Named applicability limit of the method family; coverage inflation stated. |
+| P6.1 | TARGET axes = descriptive characterisation of frozen seed module only; **no fused rank**; H7 non-informative banner on every table; do-not enforced in code (`scripts/run_phase6_target_descriptive.py` raises on fused-rank/ranked-list-as-finding). | Recorded rescope; H7 non-informative binds. |
+| P6.2 | H6 on BENCHMARK, k=20 primary bootstrap over gold (α=0.05). `scripts/run_phase6_h6_benchmark.py` | **NULL** at k=20 (network-flow enrichment@20 = 0, CI [0,0]). L1000/tissue axes not acquired → no imputation → <2 axes → no fused rank; convergence advantage not evaluable. Secondary k=100/250 enrichment (4.9×/5.5×) reported as secondary only. |
+| P6.3a | GSE238208 inflammation-specificity defence executed. `scripts/run_phase6_gse238208_specificity.py` | **PASS.** Seed module separates Hunner-type IC from BCG cystitis AUROC 0.94 (MWU p=1.5e-6, 100% direction agreement), beats size-matched random sets (empirical p=0.006) → **Hunner-specific**, not generic bladder inflammation. |
+| P6.3b | Permuted-signature null defence executed (signature label-permutation, n_perm=1000, R-free; flow cached per drug). `scripts/run_phase6_permuted_signature_null.py` | **PASS (§B3).** Ranking order collapses under permutation (mean \|Spearman\|=0.15; AUPRC 0.033→null-mean 0.017 toward chance); danger flag NOT raised. Residual only marginally above null (p=0.073), consistent with weak-signal headline. |
+
+**Exit criteria (§C) satisfied.** Analytical work complete; remaining task is the manuscript.
+

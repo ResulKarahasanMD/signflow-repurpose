@@ -42,6 +42,19 @@ def test_healthy_pool_passes():
     assert report["gold_prevalence"] == pytest.approx(0.02)
 
 
+def test_candidate_pool_sha_verifies_when_present():
+    from pathlib import Path
+
+    from signflow.phase5.acquire import verify_candidate_pool_sha
+
+    pool = Path("data/raw/drugs/pool/approved_drug_universe.tsv")
+    if not pool.exists():
+        pytest.skip("approved pool not present")
+    rec = verify_candidate_pool_sha()
+    assert rec["verified"] is True
+    assert len(rec["sha256"]) == 64
+
+
 def test_unsigned_adjacency_ignores_sign():
     edges = pd.DataFrame(
         {

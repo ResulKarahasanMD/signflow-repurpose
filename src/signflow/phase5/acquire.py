@@ -437,11 +437,48 @@ def fetch_chembl_approved_molecules(raw_root: Path, *, max_phase: int = 4) -> di
     return record
 
 
+def verify_candidate_pool_sha(raw_root: Path | None = None) -> dict[str, object]:
+    """Enforce frozen approved-drug universe digest (stop-and-report on mismatch)."""
+
+    plan = yaml.safe_load(FROZEN_PLAN.read_text())["plan"]
+    raw_root = Path(raw_root or PHASE5_RAW)
+    path = raw_root / "pool" / "approved_drug_universe.tsv"
+    expected = plan.get("phase5_candidate_pool_sha256")
+    if expected is None:
+        raise StopAndReportError(
+            "phase5_candidate_pool_sha256 is unset; freeze pool hash before scoring",
+            reason="candidate-pool-sha-unset",
+        )
+    if not path.exists():
+        raise StopAndReportError(
+            f"Missing approved-drug universe at {path}",
+            reason="candidate-pool-missing",
+            details={"path": str(path)},
+        )
+    observed = sha256_path(path)
+    if observed != str(expected):
+        raise StopAndReportError(
+            f"approved_drug_universe.tsv SHA mismatch: {observed} != {expected}",
+            reason="candidate-pool-sha-mismatch",
+            details={"expected": expected, "observed": observed, "path": str(path)},
+        )
+    n_universe = int(plan.get("phase5_candidate_pool_n_universe") or 0)
+    n_gold = int(plan.get("phase5_candidate_pool_n_gold") or 0)
+    return {
+        "path": str(path),
+        "sha256": observed,
+        "verified": True,
+        "n_universe_frozen": n_universe,
+        "n_gold_frozen": n_gold,
+    }
+
+
 def load_approved_drug_universe(raw_root: Path | None = None) -> pd.DataFrame:
     raw_root = Path(raw_root or PHASE5_RAW)
     path = raw_root / "pool" / "approved_drug_universe.tsv"
     if not path.exists():
         fetch_chembl_approved_molecules(raw_root)
+    verify_candidate_pool_sha(raw_root)
     return pd.read_csv(path, sep="\t")
 
 

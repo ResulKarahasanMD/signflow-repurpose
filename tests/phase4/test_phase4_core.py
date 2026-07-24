@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 from signflow.phase4.conformal import empirical_coverage, mondrian_conformal_sets
 from signflow.phase4.data import hash_bytes, load_phase3_benchmark
-from signflow.phase4.metrics import compute_metrics
+from signflow.phase4.metrics import bootstrap_ci, compute_metrics, load_bootstrap_n, minimum_detectable_difference
 
 
 def test_metrics_on_perfect_ranking():
@@ -77,5 +77,43 @@ def test_sign_shuffle_changes_edge_signs():
     real = pd.read_csv(bench / "graph_edges.tsv", sep="\t")
     shuf = pd.read_csv(bench / "controls" / "edges_sign_shuffled.tsv", sep="\t")
     assert len(real) == len(shuf)
-    # Sign multiset equal but assignment may differ
     assert sorted(real["sign"].tolist()) == sorted(shuf["sign"].tolist())
+    assert sorted(real["relation_type"].astype(str).tolist()) == sorted(shuf["relation_type"].astype(str).tolist())
+    # Repaired control must change both fields models read (when enough signed edges)
+    signed = real["relation_type"].isin(["stimulation", "inhibition"]) & real["sign"].isin([1, -1])
+    if int(signed.sum()) >= 20:
+        assert not np.array_equal(real.loc[signed, "sign"].to_numpy(), shuf.loc[signed, "sign"].to_numpy())
+        assert not np.array_equal(
+            real.loc[signed, "relation_type"].astype(str).to_numpy(),
+            shuf.loc[signed, "relation_type"].astype(str).to_numpy(),
+        )
+
+
+def test_bootstrap_n_frozen_at_least_1000():
+    assert load_bootstrap_n() >= 1000
+
+
+def test_mcc_omitted_in_pu_regime():
+    y = np.array([1, 0, 0, 0, 0, 0, 0, 0])
+    s = np.array([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2])
+    m = compute_metrics(y, s, regime="pu")
+    assert np.isnan(m["mcc"]) and np.isnan(m["ece"])
+
+
+def test_ece_uses_probabilities_not_ranks():
+    y = np.array([1, 1, 0, 0])
+    probs = np.array([0.9, 0.8, 0.2, 0.1])
+    m = compute_metrics(y, probs, probabilities=probs, regime="degree_matched")
+    assert 0.0 <= m["ece"] <= 1.0
+
+
+def test_minimum_detectable_difference():
+    assert minimum_detectable_difference(0.2, 0.2) == pytest.approx(0.2)
+
+
+def test_bootstrap_ci_respects_n_boot():
+    y = np.array([1, 1, 0, 0, 1, 0])
+    s = np.array([0.9, 0.8, 0.1, 0.2, 0.7, 0.3])
+    ci = bootstrap_ci(y, s, n_boot=50, seed=0)
+    assert ci["n_boot"] > 0
+    assert "width" in ci

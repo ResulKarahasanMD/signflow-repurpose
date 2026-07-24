@@ -252,6 +252,12 @@ SSL embeddings + propagation from **signature-extreme seeds only**.
 - **TARGET meta-analytic signature is dominated by a single cohort; the second cohort is too imprecise to confirm or refute it.** GSE11783 alone yields 775 genes at BH-FDR<0.05; the two-study DL meta yields 640 (meta reduced rather than added evidence). Among meta-significant genes, mean random-effects weight share is ≈0.80 for GSE11783 vs ≈0.20 for GSE57560 (n_control=3). Of the 640 meta-significant genes, only 39 reach nominal p<0.05 in GSE57560; most merely share direction.
 - **I² heterogeneity guard is weak under extreme weight imbalance.** I² is low both when studies agree and when one study is too imprecise to disagree. With near-zero effective weight on GSE57560 for many genes, Q collapses and I²→0 for uninformative second-cohort genes. Primary seed rule (top-50 by |pooled moderated effect|, I²≤50%) remains unchanged (frozen pre-inspection); a sensitivity seed requiring concordant direction in both cohorts is the pre-specified guard (P2.6.2).
 
+### Phase 4.6 limitations (sign / chance / power)
+
+- **Sign is not detectably used on the BENCHMARK node-classification task** under the repaired sign-shuffle control, while topology is (real ≈ sign_shuffled; real > rewired for gatv2 and ssl_gatv2). This limits C1/C4 as claims that *signed* relations are necessary for performance; Phase 5 treats signed-vs-unsigned drug scoring as a co-primary test of the same question.
+- **RWR (pre-registered structural baseline) is itself at chance** (AUPRC 0.524 [0.466, 0.594]); several feature/GNN models exceed chance (CI lower bound > 0.5), but W1 still finds no GNN advantage over RWR (MDD ≈ 0.128).
+- **Minimum detectable AUPRC difference ≈ 0.128** on the corrected pooled protocol — null sign / null GNN-advantage findings are not evidence of absence below that gap.
+
 ## 11c. Phase 3 exit
 
 Signed causal graph (OmniPath+SIGNOR) + STRING aux; BENCHMARK UC labels n=396 asserted; TARGET seeds only; splits and control graphs cached. See `docs/phase3/EXIT_REPORT.md`. Do not begin Phase 4 until Phase 3 tests are green and that report is committed.

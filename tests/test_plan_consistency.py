@@ -230,3 +230,25 @@ def test_frozen_plan_matches_config_and_docs():
     assert covered_keys == set(frozen_plan), (
         f"Frozen plan keys missing assertion coverage: {sorted(set(frozen_plan) - covered_keys)}"
     )
+
+    # Gold-standard drug file hash must match frozen digest (Phase 5 §B)
+    import hashlib
+    gold_path = Path(frozen_plan["benchmark_gold_drugs_path"])
+    assert gold_path.exists(), f"Missing gold drugs file {gold_path}"
+    digest = hashlib.sha256(gold_path.read_bytes()).hexdigest()
+    assert digest == frozen_plan["benchmark_gold_drugs_sha256"], (
+        f"benchmark_gold_drugs_sha256 mismatch: file={digest} frozen={frozen_plan['benchmark_gold_drugs_sha256']}"
+    )
+    assert frozen_plan["benchmark_gold_out_of_substrate_policy"] == (
+        "exclude_from_denominator_report_as_coverage_miss"
+    )
+
+    # Phase 5.3 / 5.4 freezes
+    assert frozen_plan["phase5_score_variant_primary"] == "signed"
+    assert frozen_plan["phase5_score_variant_coprimary"] == "unsigned"
+    assert frozen_plan["phase5_candidate_pool_rule"] == "disease_agnostic_approved_drugs"
+    assert frozen_plan["phase5_candidate_pool_disease_conditioning"] == "forbidden"
+    assert frozen_plan["phase5_candidate_pool_min_in_substrate"] == 500
+    assert frozen_plan["phase5_candidate_pool_gold_prevalence_ceiling"] == 0.10
+    assert "ion_channel" in frozen_plan["phase5_target_class_taxonomy"]
+    assert frozen_plan["phase5_score_k_values"] == [20, 50, 100, 250]

@@ -127,3 +127,91 @@
 | P4.5.4 | Sign-shuffle permutes `sign` **and** stimulation↔inhibition `relation_type` | Prior shuffle left R-GCN `edge_type` unchanged (inert control) |
 | P4.5.5 | Drop conformal `useful` boolean; report mean set size alone | Threshold was analysis-time hardcoded |
 | P4.5.6 | Report minimum detectable AUPRC difference beside H1 | Negative from underpowered rule ≠ evidence of absence |
+
+
+## 2026-07-24 — Phase 5 precondition (§B): UC gold-standard freeze
+
+**Outcome-dependent?** No. Frozen from Open Targets APPROVAL-stage query for `MONDO_0005101` before any drug–target acquisition or Phase 5 scoring. Inclusion is a stage rule plus two documented mechanistic exclusions (non-therapeutics), not a hand-picked rediscovery list.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.0.1 | Create `configs/benchmark_drugs.yaml`; hash into `FROZEN_PLAN` (`benchmark_gold_drugs_sha256`) | Close Phase 0 documentation addendum §1 before drug data load |
+| P5.0.2 | Out-of-substrate targets: exclude from rediscovery denominator; report as coverage misses | Aligns with `phase5_min_drug_targets_in_substrate=1` and poor-coverage policy |
+| P5.0.3 | Eligibility: topical/systemic 5-ASA, corticosteroids, biologics, advanced small molecules included when APPROVAL | Pre-specify class eligibility; not post-hoc after rankings |
+
+
+## 2026-07-24 — Phase 5.1 freeze (sign-flow policies; before scoring)
+
+**Outcome-dependent?** No. Edge/action/flow constants frozen before drug–target scoring or rankings.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.1.1 | `phase5_ambiguous_edge_policy` / `phase5_unsigned_directed_edge_policy` = exclude_from_signed_propagation | Sign-consistent flow cannot invent a sign for ambiguous/unsigned edges |
+| P5.1.2 | `phase5_string_unsigned_edge_policy` = unsigned_connectivity_only | Sensitivity substrate adds adjacency without signed path products |
+| P5.1.3 | Action sign map + `unknown_action` exclude-from-signed-score | No guessing; retain unknown in coverage |
+| P5.1.4 | Flow damping=0.85, max_iter=100, tol=1e-8; aggregation=sum_over_module_opposition | Pre-specify continuous signed diffusion (≠ CARNIVAL ILP) |
+
+
+## 2026-07-24 — Phase 5.2 ranking universe (pre-rerun) — SUPERSEDED by P5.4
+
+**Outcome-dependent?** No at the time (metric-definition repair). **Superseded:** the OT `drugAndClinicalCandidates` universe remains disease-conditioned on UC and is not a valid rediscovery background under P5.4.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.2.1 | Ranking universe = all OT drugAndClinicalCandidates ∪ frozen gold | Gold-only background cannot adjudicate rediscovery |
+| P5.2.2 | Rediscovery precision/enrichment computed on full scored universe; report gold ranks explicitly | Fix metric definition defect in first pass |
+
+
+## 2026-07-24 — Phase 4.6 corrections (blocking; skipped items from prior prompt)
+
+**Outcome-dependent?** No for chance-baseline / sign-finding / conformal-protocol / PU-CI reporting (pre-registered results and protocol repairs). Paired-difference bootstrap is pre-committed **exploratory**; W1 remains binding. Hub/LOSO extension is protocol completeness, not tuning.
+
+| ID | Change | Reason |
+|---|---|---|
+| P4.6.1 | Chance-baseline narrative: models with CI lower bound >0.5 listed; RWR at chance | Exit report incorrectly claimed no graph method exceeded chance |
+| P4.6.2 | Promote sign finding: real≈sign_shuffled but real>rewired (gatv2, ssl_gatv2); MDD≈0.128 caveat into GAP_STATEMENT C1/C4 + Limitations | Topology used; sign not detectably used |
+| P4.6.3 | Re-run Mondrian conformal on pooled 5-fold val-calibration protocol | Prior 1.808/0.939 were fold-0-only |
+| P4.6.4 | Report PU AUPRC CIs (n_boot=1000); narrate R-GCN PU inversion and ssl_gatv2 PU lead | Point estimates alone hide uncertainty / regime reversal |
+| P4.6.5 | Paired-difference bootstrap (gatv2−rwr) as exploratory; W1 binding | Pre-committed exploratory contrast |
+| P4.6.6 | Hub-stratified and LOSO extended to rwr and gatv2 (not logistic only) | Protocol completeness |
+
+
+## 2026-07-24 — Phase 5 VOID (candidate-pool artifact)
+
+**Outcome-dependent?** No. Voiding is a defect recognition about **pool composition**, not a response to an unfavorable rediscovery score. The reported metrics are arithmetically forced by a 29/30 gold pool.
+
+**What was reported (stamp `20260723T235004Z`):** `n_drugs_total=30`, `n_gold_total=29`, `precision_at_20=1.0`, `enrichment_at_20/50=1.0`, `canonical_group_recall_at_50=1.0`, `n_coverage_misses=0`, `n_bh_fdr_survivors=10`, Spearman ρ=−0.137 (p=0.47); `acquisition.skipped=true`; `drug_data_touched=false` while drug tables were read.
+
+**Why void:** With 29/30 gold, any top-20 has precision ≥0.95; enrichment=1.0 is the null; top-50 is the entire pool; coverage cannot be assessed; no ion-channel class in the voided breakdown; W3 degree confounding unanswerable at n=30.
+
+**Manuscript rule:** No rediscovery claim from the voided stamp (or from the disease-conditioned OT-candidate rerun) enters the manuscript.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.3.0 | Mark Phase 5 run dirs VOID/SUPERSEDED; retain for audit | Candidate-pool artifact |
+| P5.3.1 | Fix `drug_data_touched`: must be true whenever any drug resource is read; stop-and-report + test | Provenance flag inverted reality |
+
+
+## 2026-07-24 — Phase 5.3 signed-vs-unsigned co-primary freeze
+
+**Outcome-dependent?** Partially exposed, honestly recorded. Motivated by the Phase 4 sign control (pre-registered), **not** by any interpretable drug ranking. The only ranking produced so far is void by pool composition. **Exposure:** 30 drug scores from the voided stamp were nonetheless visible before this freeze. This freeze is therefore not a clean pre-data freeze; the exposure is stated rather than denied.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.3.2 | `phase5_score_variant_primary: signed`, `phase5_score_variant_coprimary: unsigned` | Identical directed substrate; unsigned ignores edge sign |
+| P5.3.3 | Pre-specify enrichment@20/50 + pool-wide AUROC/AUPRC with paired bootstrap; if signed ≯ unsigned beyond detectable threshold → report no measurable sign benefit | Aligns with Phase 4 control |
+| P5.3.4 | Do not drop signed if it underperforms — it remains the pre-registered primary | Finding = the comparison result |
+| P5.3.5 | Report connectivity after `exclude_from_signed_propagation` (components, largest component, isolates) for both tracks | ~35% of causal edges removed; fragmentation is a structural finding |
+
+
+## 2026-07-24 — Phase 5.4 disease-agnostic candidate pool (rebuild)
+
+**Outcome-dependent?** No. Pool inclusion rule frozen **before** acquisition of the approved-drug universe. Motivated by the voided pool-composition defect, not by drug ranks.
+
+| ID | Change | Reason |
+|---|---|---|
+| P5.4.1 | Pool = ChEMBL `max_phase=4` (disease-agnostic) ∪ frozen UC gold; OT disease candidates annotation-only | Gold must be a small minority (~1–2%) for enrichment to be interpretable |
+| P5.4.2 | Freeze pool path + SHA-256; floor `phase5_candidate_pool_min_in_substrate=500`; gold-prevalence ceiling 0.10 (hard-fail) | Prevent re-reporting the voided failure mode |
+| P5.4.3 | Metrics: enrichment/recall@k for k∈{20,50,100,250}; AUROC/AUPRC n_boot=1000; chance baselines; signed∥unsigned | Appropriate to corrected prevalence |
+| P5.4.4 | Coverage taxonomy includes `ion_channel`; report gold vs full-pool class breakdowns separately | Gap the voided run could not measure |
+| P5.4.5 | Stop-and-report: pool below floor; gold prevalence > ceiling; `drug_data_touched` false while resources read; requests to revise frozen constants after rankings | Hard gates |

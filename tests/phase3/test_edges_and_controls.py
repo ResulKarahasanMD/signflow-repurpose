@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -60,18 +61,45 @@ def test_post_merge_collapse_resolves_cross_source_sign_conflict():
 def test_sign_shuffle_preserves_degree_and_sign_multiset():
     edges = pd.DataFrame(
         {
-            "source": ["A", "A", "B", "C"],
-            "target": ["B", "C", "C", "A"],
-            "sign": [1, -1, 1, -1],
-            "relation_type": ["stimulation", "inhibition", "stimulation", "inhibition"],
-            "confidence": [1, 1, 1, 1],
-            "provenance": ["x"] * 4,
+            "source": ["A", "A", "B", "C", "D"],
+            "target": ["B", "C", "C", "A", "A"],
+            "sign": [1, -1, 1, -1, 0],
+            "relation_type": ["stimulation", "inhibition", "stimulation", "inhibition", "ambiguous"],
+            "confidence": [1, 1, 1, 1, 1],
+            "provenance": ["x"] * 5,
         }
     )
     shuffled, props = sign_shuffle(edges, seed=0)
     assert props["degree_sequence_equal"]
     assert props["sign_multiset_preserved"]
+    assert props["relation_multiset_preserved"]
+    assert props["permutes_relation_type"] is True
     assert len(shuffled) == len(edges)
+    amb = shuffled[(shuffled["source"] == "D") & (shuffled["target"] == "A")].iloc[0]
+    assert amb["sign"] == 0 and amb["relation_type"] == "ambiguous"
+
+
+def test_sign_shuffle_changes_fields_models_read():
+    """A4: shuffled graph must differ in edge_attr (sign) and edge_type (relation)."""
+
+    edges = pd.DataFrame(
+        {
+            "source": [f"S{i}" for i in range(40)],
+            "target": [f"T{i}" for i in range(40)],
+            "sign": [1, -1] * 20,
+            "relation_type": ["stimulation", "inhibition"] * 20,
+            "confidence": [1.0] * 40,
+            "provenance": ["x"] * 40,
+        }
+    )
+    shuffled, props = sign_shuffle(edges, seed=7)
+    assert props["edge_attr_sign_field_changed"] is True
+    assert props["edge_type_relation_field_changed"] is True
+    assert not np.array_equal(edges["sign"].to_numpy(), shuffled["sign"].to_numpy())
+    assert not np.array_equal(
+        edges["relation_type"].astype(str).to_numpy(),
+        shuffled["relation_type"].astype(str).to_numpy(),
+    )
 
 
 def test_node_universe_is_expressed_intersect_network_not_de_only():

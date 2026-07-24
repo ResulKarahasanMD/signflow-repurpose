@@ -22,11 +22,9 @@ def degree_preserving_rewire(edges: pd.DataFrame, *, seed: int | None = None, n_
     g = nx.DiGraph()
     for _, row in edges.iterrows():
         g.add_edge(row["source"], row["target"], **{k: row[k] for k in edges.columns if k not in {"source", "target"}})
-    # directed degree-preserving rewire via configuration-like double edge swaps
     try:
         rewired = nx.directed_edge_swap(g.copy(), nswap=max(1, n_iter_multiplier * g.number_of_edges()), seed=seed)
     except Exception:
-        # Fallback: shuffle targets while preserving out-degree sequence approximately
         rng = np.random.default_rng(seed)
         src = edges["source"].to_numpy()
         tgt = edges["target"].to_numpy()
@@ -51,31 +49,70 @@ def edge_shuffle(edges: pd.DataFrame, *, seed: int | None = None) -> pd.DataFram
 
 
 def sign_shuffle(edges: pd.DataFrame, *, seed: int | None = None) -> tuple[pd.DataFrame, dict[str, object]]:
-    """Preserve degree and edge count; permute signs among signed edges."""
+    """Permute signs among signed edges AND swap stimulation↔inhibition relation_type.
+
+    Leaves unsigned_directed and ambiguous untouched. Preserves degree and the
+    sign / signed-relation multiset. Required so R-GCN (edge_type) and GATv2
+    (edge_attr sign) both see a changed input (Phase 4.5 A4).
+    """
 
     seed = _seed() if seed is None else seed
     rng = np.random.default_rng(seed)
     out = edges.copy()
     signed_mask = out["sign"].isin([1, -1])
-    signs = out.loc[signed_mask, "sign"].to_numpy().copy()
-    before = {"plus": int((signs == 1).sum()), "minus": int((signs == -1).sum())}
-    rng.shuffle(signs)
-    out.loc[signed_mask, "sign"] = signs
-    after = {
-        "plus": int((out.loc[signed_mask, "sign"] == 1).sum()),
-        "minus": int((out.loc[signed_mask, "sign"] == -1).sum()),
+    # Only permute among stimulation/inhibition rows (signed causal)
+    stim_inhib = out["relation_type"].isin(["stimulation", "inhibition"])
+    mask = signed_mask & stim_inhib
+
+    signs = out.loc[mask, "sign"].to_numpy().copy()
+    rels = out.loc[mask, "relation_type"].astype(str).to_numpy().copy()
+    before = {
+        "plus": int((signs == 1).sum()),
+        "minus": int((signs == -1).sum()),
+        "stimulation": int((rels == "stimulation").sum()),
+        "inhibition": int((rels == "inhibition").sum()),
     }
-    # Degree sequence of underlying undirected projection
+    # Joint shuffle of (sign, relation) pairs to preserve consistency: +1↔stimulation, -1↔inhibition
+    pairs = list(zip(signs.tolist(), rels.tolist(), strict=False))
+    rng.shuffle(pairs)
+    new_signs = np.array([p[0] for p in pairs], dtype=int)
+    new_rels = np.array([p[1] for p in pairs], dtype=object)
+    out.loc[mask, "sign"] = new_signs
+    out.loc[mask, "relation_type"] = new_rels
+
+    after = {
+        "plus": int((out.loc[mask, "sign"] == 1).sum()),
+        "minus": int((out.loc[mask, "sign"] == -1).sum()),
+        "stimulation": int((out.loc[mask, "relation_type"] == "stimulation").sum()),
+        "inhibition": int((out.loc[mask, "relation_type"] == "inhibition").sum()),
+    }
+
     def _deg(frame: pd.DataFrame) -> pd.Series:
         return pd.concat([frame["source"], frame["target"]]).value_counts().sort_index()
+
+    # Fields models read
+    edge_attr_changed = not np.array_equal(
+        edges.loc[mask, "sign"].to_numpy(), out.loc[mask, "sign"].to_numpy()
+    ) if mask.any() else False
+    edge_type_changed = not np.array_equal(
+        edges.loc[mask, "relation_type"].astype(str).to_numpy(),
+        out.loc[mask, "relation_type"].astype(str).to_numpy(),
+    ) if mask.any() else False
 
     props = {
         "n_edges_before": int(len(edges)),
         "n_edges_after": int(len(out)),
         "degree_sequence_equal": bool(_deg(edges).equals(_deg(out))),
-        "sign_counts_before": before,
-        "sign_counts_after": after,
-        "sign_multiset_preserved": before == after,
+        "sign_counts_before": {k: before[k] for k in ("plus", "minus")},
+        "sign_counts_after": {k: after[k] for k in ("plus", "minus")},
+        "relation_counts_before": {k: before[k] for k in ("stimulation", "inhibition")},
+        "relation_counts_after": {k: after[k] for k in ("stimulation", "inhibition")},
+        "sign_multiset_preserved": before["plus"] == after["plus"] and before["minus"] == after["minus"],
+        "relation_multiset_preserved": before["stimulation"] == after["stimulation"]
+        and before["inhibition"] == after["inhibition"],
+        "edge_attr_sign_field_changed": bool(edge_attr_changed),
+        "edge_type_relation_field_changed": bool(edge_type_changed),
+        "permutes_relation_type": True,
         "seed": seed,
     }
     return out, props
@@ -89,7 +126,6 @@ def verify_rewire_degree(original: pd.DataFrame, rewired: pd.DataFrame) -> bool:
 
     o_out, o_in = _out_in(original)
     r_out, r_in = _out_in(rewired)
-    # Exact preservation when directed_edge_swap works; else report False
     return bool(o_out.equals(r_out) and o_in.equals(r_in))
 
 

@@ -1,0 +1,183 @@
+schema_version: 1
+disease_id: MONDO_0005101
+disease_name: ulcerative colitis
+purpose: UC gold-standard rediscovery set for Phase 5–6; frozen before any drug–target
+  scoring
+access_date_utc: '2026-07-23'
+source:
+  resource: Open Targets Platform
+  endpoint: https://api.platform.opentargets.org/api/v4/graphql
+  field: disease.drugAndClinicalCandidates
+  stage_filter: maxClinicalStage == APPROVAL
+  raw_artifact: data/raw/opentargets/uc_drug_clinical_candidates_20260724.json
+  raw_sha256: 9e07fa836009702650943eda20b50c13534cb8e996ab858ea36def9589c9f55a
+inclusion_rule: Include every Open Targets drugAndClinicalCandidates row for MONDO_0005101
+  with maxClinicalStage==APPROVAL at access_date. Do not hand-pick from rankings.
+  Apply only the documented mechanistic_exclusions below (non-UC therapeutics).
+eligibility:
+  topical_5asa: included
+  systemic_5asa: included
+  corticosteroids_systemic_or_rectal: included
+  biologics: included
+  small_molecule_advanced_therapies: included
+  immunosuppressants_approved_for_uc_or_ibd: included
+mechanistic_exclusions:
+- chembl_id: CHEMBL582
+  reason: isopropyl alcohol — solvent/antiseptic, not UC therapy
+- chembl_id: CHEMBL1550
+  reason: phytonadione (vitamin K) — supportive, not UC DMT
+out_of_substrate_target_policy: Drugs with zero targets in the frozen primary substrate
+  (signed_causal_only) are EXCLUDED FROM THE REDISCOVERY DENOMINATOR and reported
+  separately as coverage misses. They are not counted as ranking misses. Sensitivity
+  substrate causal_plus_string_unsigned is reported alongside; do not switch primary
+  substrate.
+enrichment_counting: Primary enrichment@k counts unique canonical_group hits among
+  included drugs that have ≥1 in-substrate target. Salt/ester ChEMBL IDs map to the
+  same canonical_group.
+n_included: 29
+drugs:
+- chembl_id: CHEMBL1200538
+  pref_name: BETAMETHASONE ACETATE
+  max_clinical_stage: APPROVAL
+  canonical_group: betamethasone
+  included: true
+- chembl_id: CHEMBL1200760
+  pref_name: BALSALAZIDE DISODIUM
+  max_clinical_stage: APPROVAL
+  canonical_group: balsalazide
+  included: true
+- chembl_id: CHEMBL1200762
+  pref_name: BETAMETHASONE SODIUM PHOSPHATE
+  max_clinical_stage: APPROVAL
+  canonical_group: betamethasone
+  included: true
+- chembl_id: CHEMBL1201013
+  pref_name: OLSALAZINE SODIUM
+  max_clinical_stage: APPROVAL
+  canonical_group: olsalazine
+  included: true
+- chembl_id: CHEMBL1201580
+  pref_name: ADALIMUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: adalimumab
+  included: true
+- chembl_id: CHEMBL1201581
+  pref_name: INFLIXIMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: infliximab
+  included: true
+- chembl_id: CHEMBL1201609
+  pref_name: CORTICOTROPIN ZINC HYDROXIDE
+  max_clinical_stage: APPROVAL
+  canonical_group: corticotropin
+  included: true
+- chembl_id: CHEMBL1201833
+  pref_name: GOLIMUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: golimumab
+  included: true
+- chembl_id: CHEMBL1201835
+  pref_name: USTEKINUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: ustekinumab
+  included: true
+- chembl_id: CHEMBL131
+  pref_name: PREDNISOLONE
+  max_clinical_stage: APPROVAL
+  canonical_group: prednisolone
+  included: true
+- chembl_id: CHEMBL1370
+  pref_name: BUDESONIDE
+  max_clinical_stage: APPROVAL
+  canonical_group: budesonide
+  included: true
+- chembl_id: CHEMBL1542
+  pref_name: AZATHIOPRINE
+  max_clinical_stage: APPROVAL
+  canonical_group: azathioprine
+  included: true
+- chembl_id: CHEMBL1743087
+  pref_name: VEDOLIZUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: vedolizumab
+  included: true
+- chembl_id: CHEMBL2021430
+  pref_name: DEXAMETHASONE SODIUM PHOSPHATE
+  max_clinical_stage: APPROVAL
+  canonical_group: dexamethasone
+  included: true
+- chembl_id: CHEMBL2364648
+  pref_name: GUSELKUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: guselkumab
+  included: true
+- chembl_id: CHEMBL3358920
+  pref_name: ETRASIMOD
+  max_clinical_stage: APPROVAL
+  canonical_group: etrasimod
+  included: true
+- chembl_id: CHEMBL3622821
+  pref_name: UPADACITINIB
+  max_clinical_stage: APPROVAL
+  canonical_group: upadacitinib
+  included: true
+- chembl_id: CHEMBL3707246
+  pref_name: OZANIMOD HYDROCHLORIDE
+  max_clinical_stage: APPROVAL
+  canonical_group: ozanimod
+  included: true
+- chembl_id: CHEMBL384467
+  pref_name: DEXAMETHASONE
+  max_clinical_stage: APPROVAL
+  canonical_group: dexamethasone
+  included: true
+- chembl_id: CHEMBL389621
+  pref_name: HYDROCORTISONE
+  max_clinical_stage: APPROVAL
+  canonical_group: hydrocortisone
+  included: true
+- chembl_id: CHEMBL3989933
+  pref_name: ETRASIMOD ARGININE
+  max_clinical_stage: APPROVAL
+  canonical_group: etrasimod
+  included: true
+- chembl_id: CHEMBL3990014
+  pref_name: MIRIKIZUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: mirikizumab
+  included: true
+- chembl_id: CHEMBL3990029
+  pref_name: RISANKIZUMAB
+  max_clinical_stage: APPROVAL
+  canonical_group: risankizumab
+  included: true
+- chembl_id: CHEMBL421
+  pref_name: SULFASALAZINE
+  max_clinical_stage: APPROVAL
+  canonical_group: sulfasalazine
+  included: true
+- chembl_id: CHEMBL425
+  pref_name: OLSALAZINE
+  max_clinical_stage: APPROVAL
+  canonical_group: olsalazine
+  included: true
+- chembl_id: CHEMBL5315119
+  pref_name: UPADACITINIB HEMIHYDRATE
+  max_clinical_stage: APPROVAL
+  canonical_group: upadacitinib
+  included: true
+- chembl_id: CHEMBL635
+  pref_name: PREDNISONE
+  max_clinical_stage: APPROVAL
+  canonical_group: prednisone
+  included: true
+- chembl_id: CHEMBL650
+  pref_name: METHYLPREDNISOLONE
+  max_clinical_stage: APPROVAL
+  canonical_group: methylprednisolone
+  included: true
+- chembl_id: CHEMBL704
+  pref_name: MESALAMINE
+  max_clinical_stage: APPROVAL
+  canonical_group: mesalamine
+  included: true

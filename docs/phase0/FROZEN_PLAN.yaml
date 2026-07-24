@@ -84,3 +84,54 @@ plan:
   phase4_sign_shuffle_permutes_relation_type: true
   phase4_evaluation: pooled_5fold_oof
   phase4_hyperparameter_search: false
+  benchmark_gold_drugs_path: configs/benchmark_drugs.yaml
+  benchmark_gold_drugs_sha256: e8324ad25b89b0f7e558b0a604a39a0c97e24f74af88716a0f52aa0630d6da28
+  benchmark_gold_drugs_access_date: '2026-07-23'
+  benchmark_gold_out_of_substrate_policy: exclude_from_denominator_report_as_coverage_miss
+  phase5_ambiguous_edge_policy: exclude_from_signed_propagation
+  phase5_unsigned_directed_edge_policy: exclude_from_signed_propagation
+  phase5_string_unsigned_edge_policy: unsigned_connectivity_only
+  phase5_unknown_action_policy: exclude_from_signed_score_retain_in_coverage
+  phase5_action_sign_map:
+    agonist: 1
+    activator: 1
+    antagonist: -1
+    inhibitor: -1
+    unknown_action: null
+  phase5_flow_damping: 0.85
+  phase5_flow_max_iter: 100
+  phase5_flow_tol: 1.0e-08
+  phase5_score_aggregation: sum_over_module_opposition
+  phase5_score_variant_primary: signed
+  phase5_score_variant_coprimary: unsigned
+  phase5_score_variant_decision: signed_must_exceed_unsigned_beyond_detectable_threshold_else_report_no_measurable_sign_benefit
+  phase5_score_k_values:
+  - 20
+  - 50
+  - 100
+  - 250
+  phase5_score_k_primary: 20
+  phase5_score_k_secondary: 50
+  phase5_bootstrap_n: 1000
+  phase5_candidate_pool_rule: disease_agnostic_approved_drugs
+  phase5_candidate_pool_sources:
+  - chembl_max_phase_4
+  - dgidb_approved_when_available
+  - opentargets_approved_annotation_optional
+  phase5_candidate_pool_disease_conditioning: forbidden
+  phase5_candidate_pool_path: data/raw/drugs/pool/approved_drug_universe.tsv
+  phase5_candidate_pool_sha256: null
+  phase5_candidate_pool_min_in_substrate: 500
+  phase5_candidate_pool_gold_prevalence_ceiling: 0.10
+  phase5_conformal_module_estimator: logistic_features_only
+  phase5_negative_control_seed: 0
+  phase5_n_unrelated_negative_drugs: 50
+  phase5_drugbank_required: false
+  phase5_voided_rediscovery_stamp: 20260723T235004Z
+  phase5_target_class_taxonomy:
+  - gpcr
+  - ion_channel
+  - kinase
+  - nuclear_receptor
+  - transporter
+  - other_signalling_enzyme

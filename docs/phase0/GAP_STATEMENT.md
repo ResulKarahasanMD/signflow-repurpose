@@ -51,13 +51,21 @@ Full differentiation table: [`METHODS_PRIOR_ART.md`](METHODS_PRIOR_ART.md).
 
 **Demotions (success):** C1, C2-as-foundation, C4-as-first-OmniPath-drug-score, and C5-as-technique → **method/rigor components**. Residual publishable value = controlled evaluation + application + leakage/label design.
 
+### Phase 4.5/4.6 control finding (binding for C1/C4)
+
+| Claim component | Phase 4.5 result (pooled 5-fold OOF; repaired sign-shuffle) |
+|---|---|
+| **C1 (signed/directed graph as information)** | For valid signed models: **real ≈ sign_shuffled** but **real > rewired** (gatv2 0.590 / 0.588 / 0.516; ssl_gatv2 0.579 / 0.589 / 0.503). **Topology is used; sign is not detectably used.** |
+| **C4 (sign-consistent drug scoring)** | Phase 5 freezes signed as primary and unsigned as co-primary. If signed does not exceed unsigned beyond the detectable threshold, report that **sign contributed no measurable benefit to drug scoring**, consistent with this control. |
+| **Power caveat** | W1 MDD ≈ 0.128; observed GATv2−RWR gap ≈ 0.066 < MDD. Negative / null sign findings are limited by power, not proof of absence. |
+
 ---
 
 ## 3. Prior LUAD weaknesses → design responses (updated)
 
 | ID | Weakness | Response after 0.5 |
 |---|---|---|
-| W1 | RWR beat GNN | Fair comparison retained; honesty rule retained |
+| W1 | RWR beat GNN | Fair comparison retained; honesty rule retained; RWR itself at chance on corrected run |
 | W2 | Label scarcity | SSL transfer retained as component; TARGET primary = **unsupervised** (*n*=38 filtered labels) |
 | W3 | Degree confounding | Degree-matched nulls retained |
 | W4 | mRNA ≠ activity | DoRothEA/PROGENy **core** (not optional) |

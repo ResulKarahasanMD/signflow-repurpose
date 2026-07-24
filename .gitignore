@@ -27,6 +27,8 @@ data/processed/**
 # Run outputs with large artifacts
 runs/**
 !runs/.gitkeep
+logs/**
+!logs/.gitkeep
 *.pt
 *.pth
 *.ckpt

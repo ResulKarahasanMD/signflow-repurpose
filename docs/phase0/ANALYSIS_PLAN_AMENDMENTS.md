@@ -215,3 +215,16 @@
 | P5.4.3 | Metrics: enrichment/recall@k for k∈{20,50,100,250}; AUROC/AUPRC n_boot=1000; chance baselines; signed∥unsigned | Appropriate to corrected prevalence |
 | P5.4.4 | Coverage taxonomy includes `ion_channel`; report gold vs full-pool class breakdowns separately | Gap the voided run could not measure |
 | P5.4.5 | Stop-and-report: pool below floor; gold prevalence > ceiling; `drug_data_touched` false while resources read; requests to revise frozen constants after rankings | Hard gates |
+
+
+## 2026-07-24 — Phase 5.4 rebuild completion
+
+**Outcome-dependent?** Results reported as observed under pre-frozen rules; no constants revised after rankings.
+
+| Item | Value |
+|---|---|
+| Stamp | `20260724T004001Z` |
+| Pool | n=4225; gold=29 (0.686%); in-substrate=2833 |
+| Signed vs unsigned decision | `sign_contributed_no_measurable_benefit_to_drug_scoring` |
+| BH-FDR survivors | **0** |
+| Connectivity | 34.3% edges excluded; 1313 components; 1232 isolates |

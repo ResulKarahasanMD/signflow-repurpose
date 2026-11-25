@@ -1,10 +1,11 @@
 [project]
 name = "signflow-repurpose"
 version = "0.1.0"
-description = "Phase 1 infrastructure for the SignFlow-Repurpose project"
+description = "Pre-registered signed-network drug-repurposing study (IC/BPS target, ulcerative colitis benchmark)"
+license = "MIT"
 readme = "README.md"
 authors = [
-    { name = "ResulKarahasanMD" }
+    { name = "Resul Ahmet Karahasan" }
 ]
 requires-python = ">=3.12"
 dependencies = [

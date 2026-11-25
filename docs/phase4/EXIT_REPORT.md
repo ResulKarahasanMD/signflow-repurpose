@@ -1,9 +1,9 @@
 # Phase 4 / 4.5 Exit Report
 
 **Corrected run date (UTC):** 2026-07-23 / 2026-07-24
-**Corrected output:** `/Users/rak/bio-research/data/processed/phase4/20260723T215010Z`
-**Original (voided) output:** `/Users/rak/bio-research/data/processed/phase4/20260723T204931Z`
-**Phase 3 root:** `/Users/rak/bio-research/data/processed/phase3/20260723T203525Z`
+**Corrected output:** `data/processed/phase4/20260723T215010Z`
+**Original (voided) output:** `data/processed/phase4/20260723T204931Z`
+**Phase 3 root:** `data/processed/phase3/20260723T203525Z`
 **Splits hash:** `52f3f0d6cf98c6ff14afa2a3e14371b57ea61e8df15be08dfb5119f16a77a584`
 **Drug data touched:** `False`
 
@@ -188,7 +188,7 @@ Non-claim: Conformal coverage is over the gene/drug population under the labelle
 
 ## TARGET propagation
 
-Top-50 overlap n = 50 (see `/Users/rak/bio-research/data/processed/phase4/20260723T215010Z/target/target_propagation_summary.json`).
+Top-50 overlap n = 50 (see `data/processed/phase4/20260723T215010Z/target/target_propagation_summary.json`).
 
 ## Firewall
 

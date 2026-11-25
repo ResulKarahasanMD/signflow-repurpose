@@ -1,7 +1,7 @@
 # Phase 3 Exit Report
 
 **Date (UTC):** 2026-07-23  
-**Output root:** `/Users/rak/bio-research/data/processed/phase3/20260723T200209Z` (symlink `data/processed/phase3/latest`)  
+**Output root:** `data/processed/phase3/20260723T200209Z` (symlink `data/processed/phase3/latest`)  
 **Conflict rule (frozen pre-inspection):** `retain_as_ambiguous`  
 **Drug data touched:** `False`  
 **Firewall:** Disease-gene labels allowed on **BENCHMARK** only; drug/DGIdb/ChEMBL resources not imported in Phase 3.
@@ -105,7 +105,7 @@ Completed and committed (`08b77a0`): TARGET meta dominated by GSE11783; sensitiv
 ## Phase 3.5 Addendum (2026-07-23) — corrections before Phase 4
 
 **Status:** Activity features redefined; post-merge unique-pair conflict rule applied; control graphs regenerated; Phase 5 proximity substrate frozen blind to drug data.  
-**Commits:** this addendum; run artifacts under `/Users/rak/bio-research/data/processed/phase3/20260723T203525Z`.  
+**Commits:** this addendum; run artifacts under `data/processed/phase3/20260723T203525Z`.  
 **Outcome-dependence:** A2 = defect fix (not a rule change). A4 frozen pre-inspection. A1 methodological.
 
 ### Numbers that changed vs prior Phase 3 exit report

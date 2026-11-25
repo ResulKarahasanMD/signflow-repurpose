@@ -1,9 +1,9 @@
 # Phase 5 Exit Report (completions — §A)
 
 **Run stamp (UTC):** 20260724T075949Z
-**Output:** `/Users/rak/bio-research/data/processed/phase5/20260724T075949Z`
-**Prior rebuild reused:** `/Users/rak/bio-research/data/processed/phase5/20260724T004001Z`
-**Phase 3 root:** `/Users/rak/bio-research/data/processed/phase3/20260723T203525Z`
+**Output:** `data/processed/phase5/20260724T075949Z`
+**Prior rebuild reused:** `data/processed/phase5/20260724T004001Z`
+**Phase 3 root:** `data/processed/phase3/20260723T203525Z`
 **Drug data touched:** `True`
 
 ## Status

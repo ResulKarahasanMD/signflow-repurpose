@@ -31,6 +31,10 @@ Two earlier runs were voided and are kept in the reports next to their correctio
 the first Phase 4 run (undertrained, single fold) and the first Phase 5 pools
 (dominated by gold drugs). See `docs/phase4/EXIT_REPORT.md` and `docs/phase5/EXIT_REPORT.md`.
 
+**Where the numbers come from.** Every figure above was produced by the runs of July 2026 and is quoted
+from the phase reports written at the time. Nothing was re-run for this publication; only the offline
+test suite was run on the published tree (see *Running*).
+
 ## Limitations
 
 - The IC/BPS cohorts are very small (5 vs. 6 and 13 vs. 3 samples after one sample per patient). This rules out any state-of-the-art methods claim.
@@ -57,6 +61,16 @@ The analysis plan was frozen before any Phase 2 data download.
 `prereg-phase0.5` and two public gists that serve as the external timestamp (2026-07-23).
 Deviations are logged in [`docs/phase0/ANALYSIS_PLAN_AMENDMENTS.md`](docs/phase0/ANALYSIS_PLAN_AMENDMENTS.md);
 [`docs/phase0/FROZEN_PLAN.yaml`](docs/phase0/FROZEN_PLAN.yaml) is the machine-readable source of every frozen constant.
+
+**Former name.** This repository was developed privately under the name `bio-research` and is published
+as `signflow-repurpose` with its original commit history. The two gists and the commit hashes in the
+pre-registration record refer to that repository; because the history is unchanged, those hashes resolve here:
+
+```bash
+git rev-parse 2b1a39af2a2cb6ee9595bc1b8f251d4210a389ab   # plan-content freeze commit
+git rev-parse d2e4bef71b7f924db761bbfb9c10603df82b17a2   # Phase 0.6 commit
+git rev-parse prereg-phase0.5^{}                          # d9751f90965b17d1ffe7c1138975ddc2afcfc5f9
+```
 
 | Doc | Role |
 |---|---|
